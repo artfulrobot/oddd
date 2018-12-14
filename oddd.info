@@ -1,0 +1,5 @@
+name = Artful Robot Custom Donate
+description = "Testing module"
+core = 7.x
+files[] = oddd.module
+files[] = oddd.install

@@ -1,0 +1,98 @@
+<?php
+use \ArtfulRobot\Email;
+use GeoIp2\Database\Reader;
+
+/**
+  * @file
+  * Proof of concept for PayPal donations.
+  *
+  */
+
+/**
+  * Implements hook_menu
+  */
+function oddd_menu()
+{
+  return [
+    // Proof of concept page.
+    'oddd/demo' => [
+      'page callback'   => 'oddd__page_demo',
+      'access callback' => TRUE,
+    ],
+
+    // Proof of concept JSON API
+    'oddd/api' => [
+      'page callback'   => 'oddd__page_api',
+      'access callback' => TRUE,
+    ],
+
+    // Business logic for paypal callbacks.
+    'oddd/ppcallback' => [
+      'page callback'   => 'oddd__page_ppcallback',
+      'access callback' => TRUE,
+    ],
+  ];
+}
+function oddd__page_demo() {
+
+  // Geoip.
+  require_once __DIR__ . '/vendor/autoload.php';
+
+  // This creates the Reader object, which should be reused across
+  // lookups.
+  $reader = new Reader( __DIR__ . '/GeoLite2-Country.mmdb');
+  $record = $reader->country($_SERVER['REMOTE_ADDR']);
+  $country = $record->country->isoCode;
+  $replacements = ['{country}' => $country];
+
+  if (!isset($_GET['result'])) {
+    // Give the form.
+    return ['#markup' => strtr(file_get_contents(__DIR__ . '/page-demo.html'), $replacements)];
+  }
+  elseif ($_GET['result'] == 1) {
+    return ['#markup' => "<h2>Thanks</h2><p>Muchly</p>"];
+  }
+  else {
+    return ['#markup' => "<h2>Oh no</h2><p>There was some sort of problem.</p>"];
+  }
+}
+
+
+function oddd__page_api() {
+
+  $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
+  if ($method === 'GET') {
+    $input = $_GET;
+  }
+  else {
+    $input = json_decode(file_get_contents('php://input') ?? NULL, TRUE);
+  }
+  if (!is_array($input)) {
+    header("$_SERVER[PROTOCOL] 400 Invalid request");
+    $body = '{"error": "Invalid request"}';
+  }
+
+  $method = ($input['method'] ?? '');
+  unset($input['method']);
+  if ($method === 'paypal') {
+    // OK to process.
+    // This function is business logic but needs CiviCRM so it will need to call out to CiviCRM (possibly via CMRF).
+    // It returns a paypal URL to send the user to.
+    civicrm_initialize();
+    // This could be exposed as an API method.
+    $input['success_url'] = $input['page_url'] . '?result=1';
+    $input['cancel_url'] = $input['page_url'] . '?result=0';
+    $url = oddd__get_paypal_url($input);
+    $body = json_encode(['url' => $url]);
+  }
+  else {
+    header("$_SERVER[PROTOCOL] 400 Invalid request method");
+    $body = '{"error": "Invalid request method"}';
+  }
+
+  header("Content-Type: application/json");
+  echo $body;
+  drupal_exit();
+}
+
+
