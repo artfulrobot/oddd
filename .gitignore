@@ -1,2 +1,4 @@
 GeoLite2-Country.mmdb
 vendor/
+templates/oddd/node_modules/
+templates/oddd/*.log

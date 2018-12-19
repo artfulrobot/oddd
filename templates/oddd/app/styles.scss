@@ -1,0 +1,148 @@
+$light_blue: #F1F6FB;
+$light_blue_darkened: darken(#F1F6FB, 10%);
+$dark_blue: #0061bf;
+$dark_blue_lightened: lighten(#0061bf, 20%);
+$grey_4: #444;
+$grey_6: #888;
+@mixin buttons-secondary {
+  display: block;
+  background-color:white;
+  border:solid 1px $dark_blue;
+  border-radius:2px;
+  color:$grey_4;
+  padding: 0.25rem 0.5rem;
+  &:hover {
+    color: $dark_blue;
+  }
+  &:disabled {
+    border-color: $grey_6;
+    color: $grey_6;
+    background: transparent;
+    &:hover {
+      color: $grey_6;
+    }
+  }
+}
+@mixin buttons {
+  display: block;
+  background-color:$dark_blue;
+  border:solid 1px $dark_blue;
+  border-radius:0;
+  color:white;
+  padding: 0.5rem;
+  &:hover {
+    background-color:$dark_blue_lightened;
+    color:white;
+  }
+  &.selected {
+    background-color: white;
+    color: $dark_blue;
+    font-weight: bold;
+  }
+}
+
+.odd__container {
+  display: flex;
+  flex-wrap:wrap;
+  * {
+    box-sizing: border-box;
+  }
+}
+.odd__page {
+  flex: 0 0 100%;
+  order: 2;
+  margin:0;
+}
+.odd__forms {
+  margin:0 0 1rem;
+  order: 1;
+  flex: 0 0 100%;
+}
+@media screen and (min-width: 768px) {
+  .odd__page {
+    flex: 0 0 60%;
+    order: 1;
+  }
+  .odd__forms {
+    margin:0;
+    order: 2;
+    flex: 0 0 40%;
+  }
+}
+
+.odd__body-text {
+  font-size: 1.5rem;
+}
+.odd__form {
+  background-color: $light_blue;
+  padding: 1rem;
+  margin-bottom:1rem;
+  h2 {
+    margin: 0 0 1rem;
+  }
+}
+@media screen and (min-width: 400px) {
+  .odd__page {
+    padding-right:4rem;
+  }
+}
+.odd__buttons {
+  display: flex;
+  margin:0.5rem -0.5rem;
+}
+.odd__button-wrapper {
+  flex: 1 1 auto;
+  padding:0 0.5rem;
+
+  button {
+    width:100%;
+    @include buttons;
+  }
+}
+@mixin textinputs {
+    background:white;
+    border: solid 1px $light_blue_darkened;
+    border-radius:none;
+    padding:0.25rem 0.5rem;
+    width: 100%;
+}
+.odd__amount-other {
+  display: flex;
+  margin-bottom: 1rem;
+  label { flex:0 0 auto; padding-right:1rem;}
+  .odd__amount-other-input {
+    flex:1 1 auto;
+  }
+  input {
+    @include textinputs;
+    width:100%;
+  }
+}
+.odd__textfield {
+  margin-top:0.25rem;
+  input {
+    @include textinputs;
+  }
+}
+.odd__input-pair {
+  display:flex;
+  margin: 0 -0.25rem;
+  &>div {
+    flex: 0 0 50%;
+    padding: 0 0.25rem;
+  }
+}
+.odd__donate-button {
+  button {
+    margin: 0.5rem 0 0 auto;
+    @include buttons;
+  }
+}
+.odd__back-button {
+  @include buttons-secondary;
+}
+.odd__next-button {
+  @include buttons-secondary;
+  margin:0 0 0 auto;
+}
+
