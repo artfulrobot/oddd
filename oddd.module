@@ -39,6 +39,7 @@ function oddd_menu()
  */
 function oddd_preprocess_node(&$variables) {
   if ($variables['node']->type === 'donation_page') {
+    drupal_page_is_cacheable(FALSE);
 
     // Do GeoIP lookup unless 'geo' override on query.
     if (!empty($_GET['geo']) && preg_match('/^[A-Z]{2,3}$/', $_GET['geo'])) {
@@ -52,6 +53,8 @@ function oddd_preprocess_node(&$variables) {
     }
 
     $variables['theme_hook_suggestions'][] = 'donation_page';
+    $variables['thanks'] =(($_GET['result'] ?? '') === '1'); 
+    $variables['return_url'] = 'https://opendemocracy.net';
     $variables['odd_config'] = htmlspecialchars(json_encode([
       'title'          => $variables['title'],
       'nid'            => $variables['nid'],
@@ -59,6 +62,7 @@ function oddd_preprocess_node(&$variables) {
       'regular_or_one' => $variables['field_regular_one_off'][0]['value'],
       'presets'        => json_decode($variables['field_presets'][0]['value']),
       'account'        => $variables['field_account'][0]['value'],
+      'source'         => $_GET['source'] ?? '',
       'geo'            => $country,
     ]));
   }
@@ -110,19 +114,19 @@ function oddd__page_api() {
     $input = json_decode(file_get_contents('php://input') ?? NULL, TRUE);
   }
   if (!is_array($input)) {
-    header("$_SERVER[PROTOCOL] 400 Invalid request");
+    header("$_SERVER[SERVER_PROTOCOL] 400 Invalid request");
     $body = '{"error": "Invalid request err2"}';
   }
 
   // Each request identifies itself with a nid, so we can look up various details directly from the node.
   $nid = (int) $input['nid'] ?? 0;
   if (!$nid) {
-    header("$_SERVER[PROTOCOL] 400 Invalid request");
+    header("$_SERVER[SERVER_PROTOCOL] 400 Invalid request");
     $body = '{"error": "Invalid request err1"}';
   }
   $node = node_load($nid);
   if (!$node) {
-    header("$_SERVER[PROTOCOL] 400 Invalid request");
+    header("$_SERVER[SERVER_PROTOCOL] 400 Invalid request");
     $body = '{"error": "Invalid request err3"}';
   }
 
@@ -131,18 +135,18 @@ function oddd__page_api() {
   $input['project']      = $node->field_project['und'][0]['value'] ?? '';
   $input['campaign']     = $node->field_project['und'][0]['value'] ?? '';
   $input['test_mode']    = (int) $node->field_test_mode['und'][0]['value'] ?? 0;
-  $input['success_url']  = url("node/$nid", ['absolute' => TRUE, 'query' => ['result' => 1]]);
-  $input['cancel_url']   = url("node/$nid", ['absolute' => TRUE, 'query' => ['result' => 0]]);
+  $input['return_url']  = url("node/$nid", ['absolute' => TRUE]);
 
   // This could be done over an API request if needed in future.
   civicrm_initialize();
   $response = oddc__get_redirect_url($input);
+  // testing: $response = ['error' => 'Foo error'];
 
   if (empty($response['error'])) {
     $body = json_encode(['url' => $response['url']]);
   }
   else {
-    header("$_SERVER[PROTOCOL] 400 Invalid request");
+    header("$_SERVER[SERVER_PROTOCOL] 400 Invalid request");
     $body = json_encode(['error' => $response['error']]);
   }
 

@@ -27,6 +27,7 @@
         <label :for="id + '_postal_code'">Post Code</label>
         <input :id="id + '_postal_code'" v-model='workingData.postal_code' />
       </div>
+      <!-- todo add country -->
     </div>
   </div>
 </template>
@@ -39,12 +40,14 @@ export default {
     };
   },
   props: [
-      'first_name',
-      'last_name',
-      'address',
-      'city',
-      'postal_code',
-      'country',
+    'first_name',
+    'last_name',
+    'email',
+    'address',
+    'city',
+    'postal_code',
+    'country',
+    'geo',
   ],
   mounted () {
     this.id = this._uid;
@@ -54,6 +57,7 @@ export default {
       'first_name': this.first_name,
       'last_name': this.last_name,
       'address': this.address,
+      'email': this.email,
       'city': this.city,
       'postal_code': this.postal_code,
       'country': this.country,
