@@ -4,7 +4,9 @@ use GeoIp2\Database\Reader;
 
 /**
   * @file
-  * Proof of concept for PayPal donations.
+  * oD Donations Drupal (oddd) module for donation forms on support.opendemocracy.net
+  *
+  * See also oD Donations CiviCRM (oddc) extension.
   *
   */
 
@@ -126,6 +128,24 @@ function oddd_form_donation_page_node_form_alter(&$form, &$form_state, $hook) {
     '#options' => $options,
   ];
 
+  // Convert the Campaign field into a drop-down select list.
+  $projects = civicrm_api3('OptionValue', 'get',  [
+    'sequential'      => 1,
+    'return'          => ["label", "value"],
+    'option_group_id' => "od_project_opts",
+  ]);
+  $options = ['' => '--Select--'];
+  foreach ($projects['values'] as $_) {
+    $options[$_['value']] = $_['label'];
+  }
+  // Add a widget for campaign.
+  $form['project_select'] = [
+    '#type' => 'select',
+    '#options' => $options,
+  ];
+
+
+  // Vuejs app to do json.
   drupal_add_js('https://cdn.jsdelivr.net/npm/vue@2.5.21/dist/vue.js');
   drupal_add_js(drupal_get_path('module', 'oddd') . '/admin.js');
 

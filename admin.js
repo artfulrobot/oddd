@@ -4,10 +4,15 @@
   var $real_campaign = $('#edit-field-campaign-und-0-value').hide();
   var $select_campaign = $('#edit-campaign-select');
   $select_campaign.val($real_campaign.val());
-  $select_campaign.on('change', e => {
-    $real_campaign.val($select_campaign.val());
-  });
+  $select_campaign.on('change', e => { $real_campaign.val($select_campaign.val()); });
   $select_campaign.insertAfter($real_campaign);
+
+  // Use the project select to provide the campaign text field.
+  var $real_project = $('#edit-field-project-und-0-value').hide();
+  var $select_project = $('#edit-project-select');
+  $select_project.val($real_project.val());
+  $select_project.on('change', e => { $real_project.val($select_project.val()); });
+  $select_project.insertAfter($real_project);
 
   // Convert the json field into something nicer.
   var $presetsInput = $('#edit-field-presets-und-0-value').hide();
