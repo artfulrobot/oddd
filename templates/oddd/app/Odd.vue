@@ -30,7 +30,7 @@
         <button @click.prevent="step='step1';recur=null;"  class="odd__back-button" >Back</button>
         <name-address
           @updated="updateNameAddress"
-          v-bind="{geo, first_name, last_name, email, street_address, city, postal_code, country}"
+          v-bind="{geo, first_name, last_name, email, street_address, city, postal_code, country, countries}"
           />
         <div v-if="geo === 'GB' && legal_entity === 'charity'" class="odd__giftaid">
           <h3>Gift Aid</h3>
@@ -83,17 +83,29 @@ export default {
       giftaid: false,
       consent: null,
 
-      first_name: 'Pebbles',
-      last_name: 'Flintstone',
-      email: 'forums@artfulrobot.uk',
-      street_address: 'Somewhere',
-      city: 'Nowhere',
-      postal_code: 'OX4 2HZ',
-      country: 'GB',
       test_mode: false,
 
     };
   },
+  props: [
+    'title' ,
+    'nid' ,
+    'geo' ,
+    'body' ,
+    'source',
+    'regular_or_one' ,
+    'presets' ,
+    'legal_entity',
+    'geoip',
+    'first_name',
+    'last_name',
+    'email',
+    'street_address',
+    'city',
+    'postal_code',
+    'country',
+    'countries'
+  ],
   computed: {
     box_title() {
       return this.recur === 'regular' ? 'Monthly' : 'One Off';
@@ -180,16 +192,5 @@ export default {
       });
     }
   },
-  props: [
-      'title' ,
-      'nid' ,
-      'geo' ,
-      'body' ,
-      'source',
-      'regular_or_one' ,
-      'presets' ,
-      'legal_entity',
-      'geoip'
-    ]
 }
 </script>

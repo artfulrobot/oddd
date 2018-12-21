@@ -19,6 +19,10 @@
   var editor = $('<div/>')[0];
   $presetsInput.after(editor);
 
+  if (!$presetsInput.val()) {
+    $presetsInput.val('{}');
+  }
+
   var app = new Vue({
     el: editor,
     data: { presets: JSON.parse($presetsInput.val()) },

@@ -64,10 +64,14 @@ function oddd_preprocess_node(&$variables) {
 
       $variables['background'] = "background-image:url('" . htmlspecialchars($new_image_url) . "');background-size:cover;background-position:center;padding:1rem;";
     }
+    $variables['theme_hook_suggestions'][] = 'donation_page';
 
     if (($_GET['result'] ?? '') === '1') {
       // Just displaying a thank you page.
       $variables['thanks'] = 1;
+      $variables['return_url'] = $_SESSION['od_referrer_return'] ?? 'https://opendemocracy.net';
+      unset($_SESSION['od_referrer_return']);
+      $variables['odd_config'] = htmlspecialchars(json_encode([]));
     }
     else {
       // Displaying the form.
@@ -82,11 +86,10 @@ function oddd_preprocess_node(&$variables) {
         $country = $record->country->isoCode ?? 'GB';
       }
 
-      $variables['theme_hook_suggestions'][] = 'donation_page';
-      $variables['thanks'] =(($_GET['result'] ?? '') === '1');
-      $variables['return_url'] = 'https://opendemocracy.net';
 
-      $variables['odd_config'] = htmlspecialchars(json_encode([
+      $variables['thanks'] = 0;
+
+      $odd_app_config = [
         'title'          => $variables['title'],
         'nid'            => $variables['nid'],
         'body'           => $variables['body'][0]['safe_value'] ?? '',
@@ -96,14 +99,35 @@ function oddd_preprocess_node(&$variables) {
         'account'        => $variables['field_account'][0]['value'],
         'source'         => $_GET['source'] ?? '',
         'geo'            => $country,
-      ]));
+        "email"          => '',
+        "first_name"     => '',
+        "street_address" => '',
+        "city"           => '',
+        "postal_code"    => '',
+        "country"        => $country, // default to geoip detected country
+      ];
+
+      if (!empty($_GET['cid']) && !empty($_GET['cs'])) {
+        // Looks like we have a contact ID and a checksum.
+        civicrm_initialize();
+        oddc__add_contact_data_from_checksum($odd_app_config, $_GET['cid'], $_GET['cs']);
+      }
+
+      if ($country !== 'GB') {
+        // Need to provide country list.
+        civicrm_initialize();
+        $odd_app_config['countries'] = oddc__get_country_list();
+      }
+
+      $variables['odd_config'] = htmlspecialchars(json_encode($odd_app_config));
 
       // Record referrer - we'll go back there later.
       $referrer = $_SERVER['HTTP_REFERRER'] ?? '';
-      // We must only return to od.net
-      if (!preg_match('@^https://([^.]+\.)*opendemocracy.net/(.*)$@', $referrer)) {
-        $referrer = 'https://opendemocracy.net';
+      // We must only return to od.net or staging.od.net
+      if (!preg_match('@^https://(?:(www|staging)\.)?opendemocracy.net/(.*)$@', $referrer)) {
+        $referrer = 'https://www.opendemocracy.net';
       }
+      $_SESSION['od_referrer_return'] = $referrer;
     }
 
 

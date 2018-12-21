@@ -27,7 +27,12 @@
         <label :for="id + '_postal_code'">Post Code</label>
         <input :id="id + '_postal_code'" v-model='workingData.postal_code' />
       </div>
-      <!-- todo add country -->
+    </div>
+    <div class="odd__selectfield" v-if="geo !== 'GB'">
+      <label :for="id+'_country'">Country</label>
+      <select v-model='workingData.country' :id="id+'_country'">
+        <option v-for="(name, code) in countries" :value="code" >{{name}}</option>
+      </select>
     </div>
   </div>
 </template>
@@ -47,6 +52,7 @@ export default {
     'city',
     'postal_code',
     'country',
+    'countries',
     'geo',
   ],
   mounted () {

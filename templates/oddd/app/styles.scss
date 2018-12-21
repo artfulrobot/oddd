@@ -127,6 +127,12 @@ $grey_6: #888;
     @include textinputs;
   }
 }
+.odd__selectfield {
+  margin-top:0.25rem;
+  select {
+    width: 100%;
+  }
+}
 .odd__input-pair {
   display:flex;
   margin: 0 -0.25rem;
