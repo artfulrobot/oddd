@@ -41,31 +41,98 @@ function oddd_preprocess_node(&$variables) {
   if ($variables['node']->type === 'donation_page') {
     drupal_page_is_cacheable(FALSE);
 
-    // Do GeoIP lookup unless 'geo' override on query.
-    if (!empty($_GET['geo']) && preg_match('/^[A-Z]{2,3}$/', $_GET['geo'])) {
-      $country = $_GET['geo'];
-    }
-    else {
-      require_once(__DIR__ . '/vendor/autoload.php');
-      $reader = new Reader( __DIR__ . '/GeoLite2-Country.mmdb');
-      $record = $reader->country($_SERVER['REMOTE_ADDR']);
-      $country = $record->country->isoCode ?? 'GB';
+    if (!empty($_GET['gcrf'])) {
+      // User is returning from a GoCardless redirect flow.
+      civicrm_initialize();
+      oddc__complete_redirect_url($_GET);
+      drupal_goto(request_path(), ['query' => ['result' => 1]]);
+      // Script exits here.
     }
 
-    $variables['theme_hook_suggestions'][] = 'donation_page';
-    $variables['thanks'] =(($_GET['result'] ?? '') === '1'); 
-    $variables['return_url'] = 'https://opendemocracy.net';
-    $variables['odd_config'] = htmlspecialchars(json_encode([
-      'title'          => $variables['title'],
-      'nid'            => $variables['nid'],
-      'body'           => $variables['body'][0]['safe_value'] ?? '',
-      'regular_or_one' => $variables['field_regular_one_off'][0]['value'],
-      'presets'        => json_decode($variables['field_presets'][0]['value']),
-      'account'        => $variables['field_account'][0]['value'],
-      'source'         => $_GET['source'] ?? '',
-      'geo'            => $country,
-    ]));
+    // Either displaying form or thank you.
+
+    // We need background image, if there is one.
+    $variables['background'] = '';
+    if (!empty($variables['field_background_image'][0]['uri'])) {
+      // Prepare background image
+      $image_uri      = $variables['field_background_image'][0]['uri'];
+      $style          = 'background';
+      $derivative_uri = image_style_path($style, $image_uri);
+      $success        = file_exists($derivative_uri) || image_style_create_derivative(image_style_load($style), $image_uri, $derivative_uri); $new_image_url  = file_create_url($derivative_uri);
+
+      $variables['background'] = "background-image:url('" . htmlspecialchars($new_image_url) . "');background-size:cover;background-position:center;padding:1rem;";
+    }
+
+    if (($_GET['result'] ?? '') === '1') {
+      // Just displaying a thank you page.
+      $variables['thanks'] = 1;
+    }
+    else {
+      // Displaying the form.
+      // Do GeoIP lookup unless 'geo' override on query.
+      if (!empty($_GET['geo']) && preg_match('/^[A-Z]{2,3}$/', $_GET['geo'])) {
+        $country = $_GET['geo'];
+      }
+      else {
+        require_once(__DIR__ . '/vendor/autoload.php');
+        $reader = new Reader( __DIR__ . '/GeoLite2-Country.mmdb');
+        $record = $reader->country($_SERVER['REMOTE_ADDR']);
+        $country = $record->country->isoCode ?? 'GB';
+      }
+
+      $variables['theme_hook_suggestions'][] = 'donation_page';
+      $variables['thanks'] =(($_GET['result'] ?? '') === '1');
+      $variables['return_url'] = 'https://opendemocracy.net';
+
+      $variables['odd_config'] = htmlspecialchars(json_encode([
+        'title'          => $variables['title'],
+        'nid'            => $variables['nid'],
+        'body'           => $variables['body'][0]['safe_value'] ?? '',
+        'regular_or_one' => $variables['field_regular_one_off'][0]['value'],
+        'legal_entity'   => $variables['field_account'][0]['value'],
+        'presets'        => json_decode($variables['field_presets'][0]['value']),
+        'account'        => $variables['field_account'][0]['value'],
+        'source'         => $_GET['source'] ?? '',
+        'geo'            => $country,
+      ]));
+
+      // Record referrer - we'll go back there later.
+      $referrer = $_SERVER['HTTP_REFERRER'] ?? '';
+      // We must only return to od.net
+      if (!preg_match('@^https://([^.]+\.)*opendemocracy.net/(.*)$@', $referrer)) {
+        $referrer = 'https://opendemocracy.net';
+      }
+    }
+
+
   }
+}
+function oddd_form_donation_page_node_form_alter(&$form, &$form_state, $hook) {
+
+  // Convert the Campaign field into a drop-down select list.
+  civicrm_initialize();
+  $campaigns = civicrm_api3('Campaign', 'get', [
+    'return'     => ['name', 'title'],
+    'sequential' => 1,
+    'options'    => ['limit' => 0, 'sort' => 'created_date DESC'],
+  ]);
+  $options = ['' => '--Select--'];
+  foreach ($campaigns['values'] as $_) {
+    $options[$_['name']] = $_['title'];
+  }
+  // Add a widget for campaign.
+  $form['campaign_select'] = [
+    '#type' => 'select',
+    '#options' => $options,
+  ];
+
+  drupal_add_js('https://cdn.jsdelivr.net/npm/vue@2.5.21/dist/vue.js');
+  drupal_add_js(drupal_get_path('module', 'oddd') . '/admin.js');
+
+}
+function oddd_form_alter(&$form, &$form_state, $hook) {
+  $a = $hook;
+  $a = $hook;
 }
 /**
  * Implements hook_theme().
@@ -133,7 +200,7 @@ function oddd__page_api() {
   // Augment incoming data with data from node.
   $input['legal_entity'] = $node->field_account['und'][0]['value'] ?? '';
   $input['project']      = $node->field_project['und'][0]['value'] ?? '';
-  $input['campaign']     = $node->field_project['und'][0]['value'] ?? '';
+  $input['campaign']     = $node->field_campaign['und'][0]['value'] ?? '';
   $input['test_mode']    = (int) $node->field_test_mode['und'][0]['value'] ?? 0;
   $input['return_url']  = url("node/$nid", ['absolute' => TRUE]);
 

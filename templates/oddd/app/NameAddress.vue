@@ -15,8 +15,8 @@
       <input :id="id + '_email'" v-model='workingData.email' />
     </div>
     <div class="odd__textfield">
-      <label :for="id + '_address'">Address</label>
-      <input :id="id + '_address'" v-model='workingData.address' />
+      <label :for="id + '_street_address'">Address</label>
+      <input :id="id + '_street_address'" v-model='workingData.street_address' />
     </div>
     <div class="odd__input-pair">
       <div class="odd__textfield">
@@ -43,7 +43,7 @@ export default {
     'first_name',
     'last_name',
     'email',
-    'address',
+    'street_address',
     'city',
     'postal_code',
     'country',
@@ -56,7 +56,7 @@ export default {
     this.workingData = {
       'first_name': this.first_name,
       'last_name': this.last_name,
-      'address': this.address,
+      'street_address': this.street_address,
       'email': this.email,
       'city': this.city,
       'postal_code': this.postal_code,
