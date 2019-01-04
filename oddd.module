@@ -122,7 +122,7 @@ function oddd_preprocess_node(&$variables) {
       $variables['odd_config'] = htmlspecialchars(json_encode($odd_app_config));
 
       // Record referrer - we'll go back there later.
-      $referrer = $_SERVER['HTTP_REFERRER'] ?? '';
+      $referrer = $_SERVER['HTTP_REFERER'] ?? '';
       // We must only return to od.net or staging.od.net
       if (!preg_match('@^https://(?:(www|staging)\.)?opendemocracy.net/(.*)$@', $referrer)) {
         $referrer = 'https://www.opendemocracy.net';

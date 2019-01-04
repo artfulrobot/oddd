@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log("config in data atr:", c);
     const app = new Vue({
       'el': this,
-      render: h => h(Odd, {props: c})
+      render: h => h(Odd, {props: {config: c}})
     });
   })
 });

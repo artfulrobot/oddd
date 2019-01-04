@@ -57,8 +57,7 @@ export default {
   ],
   mounted () {
     this.id = this._uid;
-    console.log("mounted1, workingData is ", JSON.stringify(this.workingData));
-    console.log("mounted1, first name", JSON.stringify(this.first_name));
+    //console.log("mounted1, workingData is ", JSON.stringify(this.workingData));
     this.workingData = {
       'first_name': this.first_name,
       'last_name': this.last_name,
@@ -68,13 +67,14 @@ export default {
       'postal_code': this.postal_code,
       'country': this.country,
     };
-    console.log("mounted2, workingData is ", JSON.stringify(this.workingData));
+    //console.log("mounted2, workingData is ", JSON.stringify(this.workingData));
   },
   watch: {
     workingData: {
       handler(new_val) {
-        console.log("watch changed workingData");
+        //console.log("watch changed workingData");
         this.$emit('updated', new_val);
+        //console.log("watch changed workingData ends");
       },
       deep: 1,
     }

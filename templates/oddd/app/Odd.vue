@@ -68,6 +68,7 @@
 </div>
 </template>
 <script>
+var foreach = require('lodash/forEach');
 import Axios from 'axios';
 import Amounts from './Amounts.vue';
 import NameAddress from './NameAddress.vue';
@@ -85,27 +86,34 @@ export default {
 
       test_mode: false,
 
+      'title' : null,
+      'nid' : null,
+      'geo' : null,
+      'body' : null,
+      'source': null,
+      'regular_or_one' : null,
+      'presets' : null,
+      'legal_entity': null,
+      'geoip': null,
+      'first_name': null,
+      'last_name': null,
+      'email': null,
+      'street_address': null,
+      'city': null,
+      'postal_code': null,
+      'country': null,
+      'countries': null,
     };
   },
-  props: [
-    'title' ,
-    'nid' ,
-    'geo' ,
-    'body' ,
-    'source',
-    'regular_or_one' ,
-    'presets' ,
-    'legal_entity',
-    'geoip',
-    'first_name',
-    'last_name',
-    'email',
-    'street_address',
-    'city',
-    'postal_code',
-    'country',
-    'countries'
-  ],
+  props: [ 'config' ],
+  created() {
+    const vm = this;
+    foreach([
+      'title', 'nid', 'geo', 'body', 'source', 'regular_or_one', 'presets', 'legal_entity',
+      'geoip', 'first_name', 'last_name', 'email', 'street_address', 'city', 'postal_code',
+      'country', 'countries'
+    ], field => vm[field] = vm.config[field] );
+  },
   computed: {
     box_title() {
       return this.recur === 'regular' ? 'Monthly' : 'One Off';
@@ -122,12 +130,9 @@ export default {
       this.step ='step2';
     },
     updateNameAddress(e) {
-      this.first_name = e.first_name;
-      this.last_name = e.last_name;
-      this.street_address = e.street_address;
-      this.city = e.city;
-      this.postal_code = e.postal_code;
-      this.country = e.country;
+      const vm=this;
+      foreach(['first_name', 'last_name', 'email', 'street_address', 'city', 'postal_code', 'country'],
+        fld => vm[fld] = e[fld]);
     },
     startPayment() {
       var errors = [];
