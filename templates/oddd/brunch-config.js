@@ -4,7 +4,6 @@ exports.files = {
     joinTo: {
       'vendor.js': /^(?!app)/, // Files that are not in `app` dir.
       'app.js': /^app\/.*\.(js|vue)/,
-      'oddreport.js': /^app\/oddreport\//,
     }
   },
   stylesheets: {joinTo: 'app.css'}

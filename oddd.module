@@ -258,7 +258,7 @@ function oddd__page_api() {
   }
   else {
     header("$_SERVER[SERVER_PROTOCOL] 400 Invalid request");
-    $body = json_encode(['error' => $response['error']]);
+    $body = json_encode(['error' => $response['error'], 'user_error' => $response['user_error'] ?? FALSE]);
   }
 
   header("Content-Type: application/json");

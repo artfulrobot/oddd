@@ -32,7 +32,7 @@ export default {
       local_currency: 'GBP',
     };
   },
-  props: ['allPresets', 'currency', 'recur', 'geo'],
+  props: ['allPresets', 'currency', 'recur', 'geo', 'amount'],
   computed: {
     presets() {
       return this.allPresets[this.recur][this.local_currency] || [];

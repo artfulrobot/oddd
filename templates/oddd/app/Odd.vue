@@ -12,7 +12,7 @@
                   @updated="updateAmount($event, 'oneoff')"
                   @finished="amountPresetClicked($event, 'oneoff')"
                   ></amounts>
-        <button :disabled="!amount_oneoff" class="odd__next-button" @click.prevent="recur='oneoff'; step='step2';">Next</button>
+        <button :disabled="!amount_oneoff" class="odd__next-button" @click.prevent="moveToStep2('oneoff', amount_oneoff)">Next</button>
       </div>
 
       <div v-if="regular_or_one[1] === 'r' && step==='step1'" class="odd__form">
@@ -22,7 +22,7 @@
                  @updated="updateAmount($event, 'regular')"
                  @finished="amountPresetClicked($event, 'regular')"
                  ></amounts>
-        <button :disabled="!amount_regular" class="odd__next-button" @click.prevent="recur='regular'; step='step2';">Next</button>
+        <button :disabled="!amount_regular" class="odd__next-button" @click.prevent="moveToStep2('regular', amount_regular)">Next</button>
       </div>
 
       <div v-show="step==='step2'" class="odd__form">
@@ -113,6 +113,20 @@ export default {
       'geoip', 'first_name', 'last_name', 'email', 'street_address', 'city', 'postal_code',
       'country', 'countries'
     ], field => vm[field] = vm.config[field] );
+
+    // Normally we default to GBP, but we must default to a currency that has presets.
+    var presetsInUse = [];
+    var presets = this.config.presets.oneoff || this.config.presets.regular;
+    if (presets) {
+      foreach(presets, (p, currency) => { if (p.length) {presetsInUse.push(currency);} });
+    }
+    if (presetsInUse.indexOf(this.currency) === -1 && presetsInUse.length > 0) {
+      // Select the first available currency.
+      this.currency = presetsInUse[0];
+    }
+    foreach(this.config.presets.h)
+    console.log(JSON.parse(JSON.stringify(this.config.presets)));
+    console.log(JSON.parse(JSON.stringify(presetsInUse)));
   },
   computed: {
     box_title() {
@@ -121,7 +135,11 @@ export default {
   },
   methods: {
     updateAmount(e, recur) {
-      this['amount_' + recur] = e.amount;
+      // This fires with 'undefined' amount when the subcomponent is destroyed
+      // which we need to avoid.
+      if (e.amount) {
+        this['amount_' + recur] = e.amount;
+      }
       this.currency=e.currency;
     },
     amountPresetClicked(e, recur) {
@@ -133,6 +151,14 @@ export default {
       const vm=this;
       foreach(['first_name', 'last_name', 'email', 'street_address', 'city', 'postal_code', 'country'],
         fld => vm[fld] = e[fld]);
+    },
+    moveToStep2(recur, amount) {
+      if (amount < 1) {
+        alert("Amount is below the minimum of 1.00.");
+        return;
+      }
+      this.recur=recur;
+      this.step='step2';
     },
     startPayment() {
       var errors = [];
@@ -147,6 +173,9 @@ export default {
       }
       if (this.consent === null) {
         errors.push("Please confirm whether you want the newsletter or not.");
+      }
+      if (this['amount_' + this.recur] < 1) {
+        errors.push("Please enter an amount. 1.00 minimum.");
       }
       if (errors.length > 0) {
         alert(errors.join("\n"));
@@ -182,9 +211,13 @@ export default {
         }
       })
       .catch( error => {
+        var user_message = 'Sorry there was a problem, please try again and let us know if this persists.';
         if (error.response) {
           // Got reply.
           console.log(error.response.data);
+          if (error.response.data && error.response.data.user_error) {
+            user_message = error.response.data.user_error;
+          }
         }
         else if (error.request) {
           console.log('Request made but no response', error);
@@ -193,7 +226,7 @@ export default {
           console.log('Network error');
         }
         this.step = 'step2';
-        alert("Sorry there was a problem.");
+        alert(user_message);
       });
     }
   },
