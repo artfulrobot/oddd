@@ -114,19 +114,24 @@ export default {
       'country', 'countries'
     ], field => vm[field] = vm.config[field] );
 
-    // Normally we default to GBP, but we must default to a currency that has presets.
+    // Check what currencies are in use by presets.
     var presetsInUse = [];
-    var presets = this.config.presets.oneoff || this.config.presets.regular;
-    if (presets) {
-      foreach(presets, (p, currency) => { if (p.length) {presetsInUse.push(currency);} });
+    function collect(presets) {
+      if (presets) {
+        foreach(presets, (p, currency) => { if (p.length) {presetsInUse.push(currency);} });
+      }
     }
+    collect(this.config.presets.oneoff);
+    collect(this.config.presets.regular);
+
+    // Select preferred currency.
+    this.currency = this.geo === 'GB' ? 'GBP' : this.geo === 'US' ? 'USD' : 'EUR';
+
+    // Check it has presets, otherwise just use the first available currency.
     if (presetsInUse.indexOf(this.currency) === -1 && presetsInUse.length > 0) {
       // Select the first available currency.
       this.currency = presetsInUse[0];
     }
-    foreach(this.config.presets.h)
-    console.log(JSON.parse(JSON.stringify(this.config.presets)));
-    console.log(JSON.parse(JSON.stringify(presetsInUse)));
   },
   computed: {
     box_title() {
