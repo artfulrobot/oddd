@@ -5,13 +5,17 @@
         <button @click.prevent="selectAmount(a)"
                 class="odd__button"
                 :class="{ selected: a==local_amount }"
-                >{{currency_symbol}}{{a}}</button>
+
+                >{{currency_symbol}}{{a}}
+                <div v-if="recur === 'regular'" class="odd__buttons__a-month">a month</div>
+        </button>
       </div>
     </div>
-    <div class="odd__amount-other">
+    <div class="odd__amount-other" :class="{invalid: !!other_amount_error}">
       <label :for="id + '_other'">Other {{currency_symbol}}</label>
       <div class="odd__amount-other-input">
         <input :id="id + '_other'" v-model="local_amount" />
+        <div v-if="!!other_amount_error" class="invalid-msg">{{ other_amount_error }}</div>
       </div>
     </div>
 
@@ -35,10 +39,16 @@ export default {
   props: ['allPresets', 'currency', 'recur', 'geo', 'amount'],
   computed: {
     presets() {
-      return this.allPresets[this.recur][this.local_currency] || [];
+      return this.allPresets[this.recur] && this.allPresets[this.recur][this.local_currency] || [];
     },
     currency_symbol() {
       return {'GBP': '£', 'USD': '$', 'EUR': '€'}[this.local_currency];
+    },
+    other_amount_error() {
+      if (!this.local_amount || this.local_amount.match(/^\d+(\.\d?\d?)?$/)) {
+        return '';
+      }
+      return 'Please enter a valid amount.';
     }
   },
   methods: {

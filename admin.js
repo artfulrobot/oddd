@@ -7,12 +7,26 @@
   $select_campaign.on('change', e => { $real_campaign.val($select_campaign.val()); });
   $select_campaign.insertAfter($real_campaign);
 
+  // Use the mailing_list_select to provide the campaign text field.
+  var $real_mailing_list = $('#edit-field-mailing-list-und-0-value').hide();
+  var $select_mailing_list = $('#edit-mailing-list-select');
+  $select_mailing_list.val($real_mailing_list.val());
+  $select_mailing_list.on('change', e => { $real_mailing_list.val($select_mailing_list.val()); });
+  $select_mailing_list.insertAfter($real_mailing_list);
+
   // Use the project select to provide the campaign text field.
   var $real_project = $('#edit-field-project-und-0-value').hide();
   var $select_project = $('#edit-project-select');
   $select_project.val($real_project.val());
   $select_project.on('change', e => { $real_project.val($select_project.val()); });
   $select_project.insertAfter($real_project);
+
+  // Use the thank_you_msg_tpl_select to provide the thank you text field.
+  var $real_msg_tpl = $('#edit-field-thank-you-tpl-und-0-value').hide();
+  var $select_msg_tpl = $('#edit-msg-tpl-select');
+  $select_msg_tpl.val($real_msg_tpl.val());
+  $select_msg_tpl.on('change', e => { $real_msg_tpl.val($select_msg_tpl.val()); });
+  $select_msg_tpl.insertAfter($real_msg_tpl);
 
   // Convert the json field into something nicer.
   var $presetsInput = $('#edit-field-presets-und-0-value').hide();

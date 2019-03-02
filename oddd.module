@@ -16,13 +16,7 @@ use GeoIp2\Database\Reader;
 function oddd_menu()
 {
   return [
-    // Proof of concept page.
-    'oddd/demo' => [
-      'page callback'   => 'oddd__page_demo',
-      'access callback' => TRUE,
-    ],
-
-    // Proof of concept JSON API
+    // JSON API
     'oddd/api' => [
       'page callback'   => 'oddd__page_api',
       'access callback' => TRUE,
@@ -40,98 +34,114 @@ function oddd_menu()
  * @param array $variables
  */
 function oddd_preprocess_node(&$variables) {
-  if ($variables['node']->type === 'donation_page') {
-    drupal_page_is_cacheable(FALSE);
+  if ($variables['node']->type !== 'donation_page') {
+    // Nothing to do with us.
+    return;
+  }
+  drupal_page_is_cacheable(FALSE);
 
-    if (!empty($_GET['gcrf'])) {
-      // User is returning from a GoCardless redirect flow.
-      civicrm_initialize();
-      oddc__complete_redirect_url($_GET);
-      drupal_goto(request_path(), ['query' => ['result' => 1]]);
-      // Script exits here.
-    }
+  if (!empty($_GET['gcrf'])) {
+    // User is returning from a GoCardless redirect flow.
+    civicrm_initialize();
+    $input = $_GET;
+    oddd__add_page_details($input, $variables['node']);
+    oddc__complete_go_cardless_redirect_url($input);
+    drupal_goto(request_path(), ['query' => ['result' => 1]]);
+    // Script exits here.
+  }
 
-    // Either displaying form or thank you.
+  if (!empty($_POST)) {
+    // User has clicked "Return to Merchant" after a successful PayPal transaction.
+    civicrm_initialize();
+    Civi::log()->info('paypal Return to Merchant', ['post' => $_POST]);
+    $input = $_POST;
+    oddd__add_page_details($input, $variables['node']);
+    oddc__complete_paypal($input);
+    drupal_goto(request_path(), ['query' => ['result' => 1]]);
+  }
 
-    // We need background image, if there is one.
-    $variables['background'] = '';
-    if (!empty($variables['field_background_image'][0]['uri'])) {
-      // Prepare background image
-      $image_uri      = $variables['field_background_image'][0]['uri'];
-      $style          = 'background';
-      $derivative_uri = image_style_path($style, $image_uri);
-      $success        = file_exists($derivative_uri) || image_style_create_derivative(image_style_load($style), $image_uri, $derivative_uri); $new_image_url  = file_create_url($derivative_uri);
+  // Now the normal case: Either displaying form or thank you.
 
-      $variables['background'] = "background-image:url('" . htmlspecialchars($new_image_url) . "');background-size:cover;background-position:center;padding:1rem;";
-    }
-    $variables['theme_hook_suggestions'][] = 'donation_page';
+  // We need background image, if there is one.
+  $variables['background'] = '';
+  if (!empty($variables['field_background_image'][0]['uri'])) {
+    // Prepare background image
+    $image_uri      = $variables['field_background_image'][0]['uri'];
+    $style          = 'background';
+    $derivative_uri = image_style_path($style, $image_uri);
+    $success        = file_exists($derivative_uri) || image_style_create_derivative(image_style_load($style), $image_uri, $derivative_uri); $new_image_url  = file_create_url($derivative_uri);
 
-    if (($_GET['result'] ?? '') === '1') {
-      // Just displaying a thank you page.
-      $variables['thanks'] = 1;
-      $variables['return_url'] = $_SESSION['od_referrer_return'] ?? 'https://opendemocracy.net';
-      unset($_SESSION['od_referrer_return']);
-      $variables['odd_config'] = htmlspecialchars(json_encode([]));
+    $variables['background'] = "background-image:url('" . htmlspecialchars($new_image_url) . "');background-size:cover;background-position:center;padding:1rem;";
+  }
+  $variables['theme_hook_suggestions'][] = 'donation_page';
+
+  if (($_GET['result'] ?? '') === '1') {
+    // Just displaying a thank you page.
+    $variables['thanks'] = 1;
+    $variables['return_url'] = $_SESSION['od_referrer_return'] ?? 'https://opendemocracy.net';
+    unset($_SESSION['od_referrer_return']);
+    $variables['odd_config'] = htmlspecialchars(json_encode([]));
+  }
+  else {
+    // Displaying the form.
+    // Do GeoIP lookup unless 'geo' override on query.
+    if (!empty($_GET['geo']) && preg_match('/^[A-Z]{2,3}$/', $_GET['geo'])) {
+      $country = $_GET['geo'];
     }
     else {
-      // Displaying the form.
-      // Do GeoIP lookup unless 'geo' override on query.
-      if (!empty($_GET['geo']) && preg_match('/^[A-Z]{2,3}$/', $_GET['geo'])) {
-        $country = $_GET['geo'];
-      }
-      else {
-        require_once(__DIR__ . '/vendor/autoload.php');
-        $reader = new Reader( __DIR__ . '/GeoLite2-Country.mmdb');
-        $record = $reader->country($_SERVER['REMOTE_ADDR']);
-        $country = $record->country->isoCode ?? 'GB';
-      }
-
-
-      $variables['thanks'] = 0;
-
-      $odd_app_config = [
-        'title'          => $variables['title'],
-        'nid'            => $variables['nid'],
-        'body'           => $variables['body'][0]['safe_value'] ?? '',
-        'regular_or_one' => $variables['field_regular_one_off'][0]['value'],
-        'legal_entity'   => $variables['field_account'][0]['value'],
-        'presets'        => json_decode($variables['field_presets'][0]['value']),
-        'account'        => $variables['field_account'][0]['value'],
-        'source'         => $_GET['source'] ?? '',
-        'geo'            => $country,
-        "email"          => '',
-        "first_name"     => '',
-        "street_address" => '',
-        "city"           => '',
-        "postal_code"    => '',
-        "country"        => $country, // default to geoip detected country
-      ];
-
-      if (!empty($_GET['cid']) && !empty($_GET['cs'])) {
-        // Looks like we have a contact ID and a checksum.
-        civicrm_initialize();
-        oddc__add_contact_data_from_checksum($odd_app_config, $_GET['cid'], $_GET['cs']);
-      }
-
-      if ($country !== 'GB') {
-        // Need to provide country list.
-        civicrm_initialize();
-        $odd_app_config['countries'] = oddc__get_country_list();
-      }
-
-      $variables['odd_config'] = htmlspecialchars(json_encode($odd_app_config));
-
-      // Record referrer - we'll go back there later.
-      $referrer = $_SERVER['HTTP_REFERER'] ?? '';
-      // We must only return to od.net or staging.od.net
-      if (!preg_match('@^https://(?:(www|staging)\.)?opendemocracy.net/(.*)$@', $referrer)) {
-        $referrer = 'https://www.opendemocracy.net';
-      }
-      $_SESSION['od_referrer_return'] = $referrer;
+      require_once(__DIR__ . '/vendor/autoload.php');
+      $reader = new Reader( __DIR__ . '/GeoLite2-Country.mmdb');
+      $record = $reader->country($_SERVER['REMOTE_ADDR']);
+      $country = $record->country->isoCode ?? 'GB';
     }
 
 
+    $variables['thanks'] = 0;
+
+    $odd_app_config = [
+      'title'           => $variables['title'],
+      'nid'             => $variables['nid'],
+      'body'            => $variables['body'][0]['safe_value'] ?? '',
+      'extra'           => $variables['field_other_text'][0]['safe_value'] ?? '',
+      'regular_or_one'  => $variables['field_regular_one_off'][0]['value'],
+      'legal_entity'    => $variables['field_account'][0]['value'],
+      'presets'         => json_decode($variables['field_presets'][0]['value']),
+      'account'         => $variables['field_account'][0]['value'],
+      'source'          => $_GET['source'] ?? '',
+      'geo'             => $country,
+      "email"           => '',
+      "first_name"      => '',
+      "street_address"  => '',
+      "city"            => '',
+      "postal_code"     => '',
+      "country"         => $country, // default to geoip detected country
+      "include_address" => (int) ($variables['field_include_address'][0]['value']),
+      "mailing_list"    => (int) ($variables['field_mailing_list'][0]['value'] ?? 0),
+    ];
+
+    if (!empty($_GET['cid']) && !empty($_GET['cs'])) {
+      // Looks like we have a contact ID and a checksum.
+      civicrm_initialize();
+      oddc__add_contact_data_from_checksum($odd_app_config, $_GET['cid'], $_GET['cs']);
+    }
+
+    if ($country !== 'GB') {
+      // Need to provide country list.
+      civicrm_initialize();
+      $odd_app_config['countries'] = oddc__get_country_list();
+    }
+
+    $variables['odd_config'] = htmlspecialchars(json_encode($odd_app_config));
+
+    // Record referrer - we'll go back there later.
+    $referrer = $_SERVER['HTTP_REFERER'] ?? '';
+    // We must only return to od.net or staging.od.net
+    if (!preg_match('@^https://(?:(www|staging)\.)?opendemocracy.net/(.*)$@', $referrer)) {
+      $referrer = 'https://www.opendemocracy.net';
+    }
+    $_SESSION['od_referrer_return'] = $referrer;
   }
+
 }
 function oddd_form_donation_page_node_form_alter(&$form, &$form_state, $hook) {
 
@@ -152,7 +162,23 @@ function oddd_form_donation_page_node_form_alter(&$form, &$form_state, $hook) {
     '#options' => $options,
   ];
 
-  // Convert the Campaign field into a drop-down select list.
+  // Convert the Mailing field into a drop-down.
+  $result = civicrm_api3('Group', 'get', [
+    'return'     => ["id", "title"],
+    'group_type' => "Mailing List",
+    'options'    => ['sort' => "title", 'limit' => 0],
+  ]);
+  $options = ['' => '--Do not offer email signup--'];
+  foreach ($result['values'] as $_) {
+    $options[$_['id']] = $_['title'];
+  }
+  // Add a widget for campaign.
+  $form['mailing_list_select'] = [
+    '#type'    => 'select',
+    '#options' => $options,
+  ];
+
+  // Convert the Project field into a drop-down select list.
   $projects = civicrm_api3('OptionValue', 'get',  [
     'sequential'      => 1,
     'return'          => ["label", "value"],
@@ -168,15 +194,27 @@ function oddd_form_donation_page_node_form_alter(&$form, &$form_state, $hook) {
     '#options' => $options,
   ];
 
+  // Convert the Thank you Message Template field into a drop-down select list.
+  civicrm_initialize();
+  $result = civicrm_api3('MessageTemplate', 'get', [
+    'return'    => ["id", "msg_title"],
+    'is_active' => 1,
+    'options'   => ['limit' => 0, 'sort' => 'msg_title'],
+  ]);
+  $options = ['' => '-- Do not send a thank you --'];
+  foreach ($result['values'] as $id => $_) {
+    $options[$id] = $_['msg_title'];
+  }
+  // Add a widget for campaign.
+  $form['msg_tpl_select'] = [
+    '#type' => 'select',
+    '#options' => $options,
+  ];
 
   // Vuejs app to do json.
   drupal_add_js('https://cdn.jsdelivr.net/npm/vue@2.5.21/dist/vue.js');
   drupal_add_js(drupal_get_path('module', 'oddd') . '/admin.js');
 
-}
-function oddd_form_alter(&$form, &$form_state, $hook) {
-  $a = $hook;
-  $a = $hook;
 }
 /**
  * Implements hook_theme().
@@ -190,31 +228,11 @@ function oddd_theme($existing, $type, $theme, $path) {
     ]];
 }
 
-function oddd__page_demo() {
 
-  // Geoip.
-  require_once __DIR__ . '/vendor/autoload.php';
-
-  // This creates the Reader object, which should be reused across
-  // lookups.
-  $reader = new Reader( __DIR__ . '/GeoLite2-Country.mmdb');
-  $record = $reader->country($_SERVER['REMOTE_ADDR']);
-  $country = $record->country->isoCode;
-  $replacements = ['{country}' => $country];
-
-  if (!isset($_GET['result'])) {
-    // Give the form.
-    return ['#markup' => strtr(file_get_contents(__DIR__ . '/page-demo.html'), $replacements)];
-  }
-  elseif ($_GET['result'] == 1) {
-    return ['#markup' => "<h2>Thanks</h2><p>Muchly</p>"];
-  }
-  else {
-    return ['#markup' => "<h2>Oh no</h2><p>There was some sort of problem.</p>"];
-  }
-}
-
-
+/**
+ * Page callback for json API endpoint used by the public VueJS app
+ *
+ */
 function oddd__page_api() {
 
   $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
@@ -241,12 +259,7 @@ function oddd__page_api() {
     $body = '{"error": "Invalid request err3"}';
   }
 
-  // Augment incoming data with data from node.
-  $input['legal_entity'] = $node->field_account['und'][0]['value'] ?? '';
-  $input['project']      = $node->field_project['und'][0]['value'] ?? '';
-  $input['campaign']     = $node->field_campaign['und'][0]['value'] ?? '';
-  $input['test_mode']    = (int) $node->field_test_mode['und'][0]['value'] ?? 0;
-  $input['return_url']  = url("node/$nid", ['absolute' => TRUE]);
+  oddd__add_page_details($input, $node);
 
   // This could be done over an API request if needed in future.
   civicrm_initialize();
@@ -267,3 +280,19 @@ function oddd__page_api() {
 }
 
 
+/**
+ * Augment incoming data with data from node.
+ *
+ * @param array &$input
+ * @param object $node
+ */
+function oddd__add_page_details(&$input, $node) {
+  $input['legal_entity']    = $node->field_account['und'][0]['value'] ?? '';
+  $input['project']         = $node->field_project['und'][0]['value'] ?? '';
+  $input['campaign']        = $node->field_campaign['und'][0]['value'] ?? '';
+  $input['include_address'] = $node->field_include_address['und'][0]['value'] ?? 0;
+  $input['mailing_list']    = $node->field_mailing_list['und'][0]['value'] ?? 0;
+  $input['test_mode']       = (int) $node->field_test_mode['und'][0]['value'] ?? 0;
+  $input['return_url']      = url("node/$node->nid", ['absolute' => TRUE]);
+  $input['thanks_message_template_id'] = (int) $node->field_thank_you_tpl['und'][0]['value'] ?? 0;
+}

@@ -1,7 +1,7 @@
 $light_blue: #F1F6FB;
 $light_blue_darkened: darken(#F1F6FB, 10%);
 $dark_blue: #0061bf;
-$dark_blue_lightened: lighten(#0061bf, 20%);
+$dark_blue_lightened: #408BC5; // From new site.
 $grey_4: #444;
 $grey_6: #888;
 @mixin buttons-secondary {
@@ -10,7 +10,13 @@ $grey_6: #888;
   border:solid 1px $dark_blue;
   border-radius:2px;
   color:$grey_4;
-  padding: 0.25rem 0.5rem;
+  color:$dark_blue;
+
+  text-transform: uppercase;
+  font-weight: 600;
+  padding: 0.6rem 1.66667rem;
+  letter-spacing: 2px;
+
   &:hover {
     color: $dark_blue;
   }
@@ -26,10 +32,14 @@ $grey_6: #888;
 @mixin buttons {
   display: block;
   background-color:$dark_blue;
-  border:solid 1px $dark_blue;
+  border-style:none;
   border-radius:0;
   color:white;
-  padding: 0.5rem;
+  text-transform: uppercase;
+  font-weight: 600;
+  padding: 1.2rem 2.66667rem;
+  letter-spacing: 2px;
+
   &:hover {
     background-color:$dark_blue_lightened;
     color:white;
@@ -40,6 +50,7 @@ $grey_6: #888;
     font-weight: bold;
   }
 }
+
 
 .odd-node-wrapper {
   min-height: calc(100vh - 8rem); // Cover except header.
@@ -60,6 +71,11 @@ $grey_6: #888;
   margin:0 0 1rem;
   order: 1;
   flex: 0 0 100%;
+
+  label {
+    font-family: 'Libre Baskerville';
+
+  }
 }
 @media screen and (min-width: 768px) {
   .odd__page {
@@ -100,7 +116,13 @@ $grey_6: #888;
   button {
     width:100%;
     @include buttons;
+    // Reduce padding, otherwise "a month" doesn't fit.
+    padding-left: 1.6rem;
+    padding-right: 1.6rem;
   }
+}
+.odd__buttons__a-month {
+  font-size: 12px;
 }
 @mixin textinputs {
     background:white;
@@ -122,7 +144,7 @@ $grey_6: #888;
   }
 }
 .odd__textfield {
-  margin-top:0.25rem;
+  margin-top:1rem;
   input {
     @include textinputs;
   }
@@ -142,7 +164,18 @@ $grey_6: #888;
   }
 }
 .odd__donate-button {
+  display:flex;
+  justify-content: flex-end;
+  align-items: center;
+
+  p.odd__opentrust {
+    flex: 1 1 auto;
+    margin:0;
+    padding-right:1.5rem;
+  }
+
   button {
+    flex:0 0 auto;
     margin: 0.5rem 0 0 auto;
     @include buttons;
   }
@@ -160,5 +193,19 @@ $grey_6: #888;
   label { flex: 1 1 auto; }
 }
 .odd__giftaid p {
+  font-size: (12rem/16);
+}
+.odd-node-wrapper .invalid {
+  label { color: #a00; }
+  input { border-color: #a00; }
+  .invalid-msg {color: #a00; font-size: (12rem/16); }
+}
+.odd__extra-wrapper {
+  margin-top: 2rem;
+  a.show-more {
+    letter-spacing: 1px; font-size: 12px;
+  }
+}
+.odd__opentrust {
   font-size: (12rem/16);
 }

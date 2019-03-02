@@ -5,8 +5,22 @@
       <div class="odd__body-text" v-html="body" />
     </div>
     <div class="odd__forms">
+      <div v-if="regular_or_one[1] === 'r' && step==='step1'" class="odd__form">
+
+        <h2>Make a regular donation</h2>
+        <amounts :allPresets="presets" recur="regular"
+                 v-bind="{currency, amount: amount_regular, geo}"
+                 @updated="updateAmount($event, 'regular')"
+                 @finished="amountPresetClicked($event, 'regular')"
+                 ></amounts>
+
+        <p>Supporting us this way helps us work more strategically.</p>
+
+        <button :disabled="!amount_regular" class="odd__next-button" @click.prevent="moveToStep2('regular', amount_regular)">Next</button>
+      </div>
+
       <div v-if="regular_or_one[0] === 'o' && step==='step1'" class="odd__form">
-        <h2>One Off</h2>
+        <h2>Make a single donation</h2>
         <amounts :allPresets="presets" recur="oneoff"
                   v-bind="{currency, amount: amount_oneoff, geo}"
                   @updated="updateAmount($event, 'oneoff')"
@@ -15,24 +29,15 @@
         <button :disabled="!amount_oneoff" class="odd__next-button" @click.prevent="moveToStep2('oneoff', amount_oneoff)">Next</button>
       </div>
 
-      <div v-if="regular_or_one[1] === 'r' && step==='step1'" class="odd__form">
-        <h2>Monthly</h2>
-        <amounts :allPresets="presets" recur="regular"
-                 v-bind="{currency, amount: amount_regular, geo}"
-                 @updated="updateAmount($event, 'regular')"
-                 @finished="amountPresetClicked($event, 'regular')"
-                 ></amounts>
-        <button :disabled="!amount_regular" class="odd__next-button" @click.prevent="moveToStep2('regular', amount_regular)">Next</button>
-      </div>
 
       <div v-show="step==='step2'" class="odd__form">
         <h2>{{box_title}}</h2>
         <button @click.prevent="step='step1';recur=null;"  class="odd__back-button" >Back</button>
         <name-address
           @updated="updateNameAddress"
-          v-bind="{geo, first_name, last_name, email, street_address, city, postal_code, country, countries}"
+          v-bind="{geo, first_name, last_name, email, street_address, city, postal_code, country, countries, include_address, errors}"
           />
-        <div v-if="geo === 'GB' && legal_entity === 'charity'" class="odd__giftaid">
+        <div v-if="geo === 'GB' && legal_entity === 'charity' && include_address" class="odd__giftaid">
           <h3>Gift Aid</h3>
           <div class="odd__checkbox">
             <input type="checkbox" v-model="giftaid" :id="'giftaid' + id" />
@@ -43,7 +48,10 @@
             the amount of Gift Aid claimed on all my pledges it is my
             responsibility to pay the difference. </p>
         </div>
-        <div >
+        <span style="display:none;">Mailinglist {{mailing_list}}</span>
+        <div :class="{invalid: !!errors.consent}" style="margin-top:2rem;"
+          v-if="mailing_list > 0"
+          >
           <p>Shall we add you to our email newsletter list? You can unsubscribe at any time.</p>
           <div class="odd__checkbox">
             <input value="1" type="radio" :name="'consent' + id" v-model="consent" :id="'consent-y' + id" />
@@ -53,8 +61,12 @@
             <input value="0" type="radio" :name="'consent' + id" v-model="consent" :id="'consent-n' + id" />
             <label :for="'consent-n' + id" >I'm already on it, or I don't want to be signed up.</label>
           </div>
+          <div class="invalid-msg" v-if="errors.consent">{{errors.consent}}</div>
         </div>
         <div class="odd__donate-button">
+          <p v-if="legal_entity === 'charity'" class="odd__opentrust">
+            The openTrust is a UK-registered charity (#1086404) that supports openDemocracy's charitable activities.
+          </p>
           <button @click.prevent="startPayment" >Donate</button>
         </div>
       </div>
@@ -64,6 +76,10 @@
         <p>Just a mo, redirecting you to the secure payment page...</p>
       </div>
     </div>
+  </div>
+  <div class="odd__extra-wrapper">
+    <a class="show-more" href v-if="extra && !showExtra" @click.prevent="showExtra = true">Other Ways To Give</a>
+    <div class="odd__extra-text" v-html="extra" v-show="showExtra"/>
   </div>
 </div>
 </template>
@@ -83,6 +99,8 @@ export default {
       step: 'step1',
       giftaid: false,
       consent: null,
+      errors: {},
+      showExtra: false,
 
       test_mode: false,
 
@@ -90,6 +108,7 @@ export default {
       'nid' : null,
       'geo' : null,
       'body' : null,
+      'extra' : null,
       'source': null,
       'regular_or_one' : null,
       'presets' : null,
@@ -103,15 +122,17 @@ export default {
       'postal_code': null,
       'country': null,
       'countries': null,
+      'include_address': null,
+      'mailing_list': null,
     };
   },
   props: [ 'config' ],
   created() {
     const vm = this;
     foreach([
-      'title', 'nid', 'geo', 'body', 'source', 'regular_or_one', 'presets', 'legal_entity',
+      'title', 'nid', 'geo', 'body', 'extra', 'source', 'regular_or_one', 'presets', 'legal_entity',
       'geoip', 'first_name', 'last_name', 'email', 'street_address', 'city', 'postal_code',
-      'country', 'countries'
+      'country', 'countries', 'include_address', 'mailing_list'
     ], field => vm[field] = vm.config[field] );
 
     // Check what currencies are in use by presets.
@@ -135,7 +156,7 @@ export default {
   },
   computed: {
     box_title() {
-      return this.recur === 'regular' ? 'Monthly' : 'One Off';
+      return this.recur === 'regular' ? 'Make a regular donation' : 'Make a single donation';
     }
   },
   methods: {
@@ -158,6 +179,11 @@ export default {
         fld => vm[fld] = e[fld]);
     },
     moveToStep2(recur, amount) {
+      console.log("moveToStep2", amount);
+      if (!amount.match(/^\d+(\.\d?\d?)?$/)) {
+        alert("Please correct amount.");
+        return;
+      }
       if (amount < 1) {
         alert("Amount is below the minimum of 1.00.");
         return;
@@ -166,24 +192,33 @@ export default {
       this.step='step2';
     },
     startPayment() {
-      var errors = [];
-      if (!this.first_name || !this.last_name) {
-        errors.push("Please give your full name.");
+      const errors = {};
+
+      const requiredInputs = (fields) => {
+        fields.forEach(pair => { if (!this[pair[0]]) errors[pair[0]] = pair[1]; });
+      };
+
+      requiredInputs([
+        ['first_name' , 'Required'],
+        ['last_name' , 'Required'],
+        ['email' , 'Required'],
+      ]);
+      if (this.include_address) {
+        requiredInputs([
+          ['street_address' , 'Required'],
+          ['city' , 'Required'],
+          ['postal_code' , 'Required'],
+        ]);
       }
-      if (!this.email) {
-        errors.push("Please give your email.");
+      if (this.mailing_list > 0) {
+        requiredInputs([ ['consent' , 'Please confirm your preference'] ]);
       }
-      if (!this.street_address || !this.postal_code || !this.city) {
-        errors.push("Please give your full address.");
-      }
-      if (this.consent === null) {
-        errors.push("Please confirm whether you want the newsletter or not.");
-      }
+
       if (this['amount_' + this.recur] < 1) {
-        errors.push("Please enter an amount. 1.00 minimum.");
+        errors['amount_' + this.recur] = "Please enter an amount. 1.00 minimum.";
       }
-      if (errors.length > 0) {
-        alert(errors.join("\n"));
+      this.errors = errors;
+      if (Object.keys(errors).length > 0) {
         return;
       }
 
