@@ -14,7 +14,7 @@
                  @finished="amountPresetClicked($event, 'regular')"
                  ></amounts>
 
-        <p>Supporting us this way helps us work more strategically.</p>
+        <p>Regular support makes the biggest difference. It means we can keep people in jobs, doing more ambitious, long-term investigations – the 'heavy lifting' that most newspapers don't do any more. Thank you.</p>
 
         <button :disabled="!amount_regular" class="odd__next-button" @click.prevent="moveToStep2('regular', amount_regular)">Next</button>
       </div>
