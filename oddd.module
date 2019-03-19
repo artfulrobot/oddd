@@ -107,7 +107,8 @@ function oddd_preprocess_node(&$variables) {
       'legal_entity'    => $variables['field_account'][0]['value'],
       'presets'         => json_decode($variables['field_presets'][0]['value']),
       'account'         => $variables['field_account'][0]['value'],
-      'source'          => $_GET['source'] ?? '',
+      'source'          => $_GET['source'] ?? ($_GET['src'] ?? ''),
+      'prefill_amount'  => $_GET['amount'] ?? '',
       'geo'             => $country,
       "email"           => '',
       "first_name"      => '',
@@ -125,7 +126,20 @@ function oddd_preprocess_node(&$variables) {
       oddc__add_contact_data_from_checksum($odd_app_config, $_GET['cid'], $_GET['cs']);
     }
 
-    if ($country !== 'GB') {
+    // Validate the prefill_amount.
+    $prefill_currency = 'GBP';
+    if (!empty($odd_app_config['prefill_amount'])) {
+      if (preg_match('/^\d+(?:\.\d\d)?(GBP|EUR|USD)(oneoff|recur)$/', $odd_app_config['prefill_amount'], $matches)) {
+        // Store the currency to see whether we need the countries list later.
+        $prefill_currency = $matches[1];
+      }
+      else {
+        // Remove it, it's not valid.
+        $odd_app_config['prefill_amount'] = '';
+      }
+    }
+
+    if ($country !== 'GB' || $prefill_currency !== 'GBP') {
       // Need to provide country list.
       civicrm_initialize();
       $odd_app_config['countries'] = oddc__get_country_list();

@@ -153,6 +153,23 @@ export default {
       // Select the first available currency.
       this.currency = presetsInUse[0];
     }
+
+    // Prefilled amount?
+    // This is passed to use as the prefill_amount property, but is passed to
+    // the page by the 'amount' query parameter.
+    if (vm.config.prefill_amount) {
+      var m = vm.config.prefill_amount.match(/^(\d+(?:\.\d\d)?)(GBP|EUR|USD)(recur|oneoff)$/);
+      if (m) {
+        // Use the preset handler to set the amount and move to the next page.
+        this.amountPresetClicked({
+          amount: m[1],
+          currency: m[2]
+        });
+      }
+      else {
+        console.log("no match", vm.config.prefill_amount);
+      }
+    }
   },
   computed: {
     box_title() {
