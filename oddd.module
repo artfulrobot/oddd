@@ -39,10 +39,10 @@ function oddd_preprocess_node(&$variables) {
     return;
   }
   drupal_page_is_cacheable(FALSE);
+  civicrm_initialize();
 
   if (!empty($_GET['gcrf'])) {
     // User is returning from a GoCardless redirect flow.
-    civicrm_initialize();
     $input = $_GET;
     oddd__add_page_details($input, $variables['node']);
     oddc__complete_go_cardless_redirect_url($input);
@@ -52,7 +52,6 @@ function oddd_preprocess_node(&$variables) {
 
   if (!empty($_POST)) {
     // User has clicked "Return to Merchant" after a successful PayPal transaction.
-    civicrm_initialize();
     Civi::log()->info('paypal Return to Merchant', ['post' => $_POST]);
     $input = $_POST;
     oddd__add_page_details($input, $variables['node']);
@@ -78,6 +77,9 @@ function oddd_preprocess_node(&$variables) {
   if (($_GET['result'] ?? '') === '1') {
     // Just displaying a thank you page.
     $variables['thanks'] = 1;
+    $variables['thanks_text'] = $variables['content']['field_thanks_web_text'][0]['#markup'] ?? '<p>Thank you.</p>';
+
+    $variables['share_url'] = 'https://support.opendemocracy.net/' . request_path();
     $variables['return_url'] = $_SESSION['od_referrer_return'] ?? 'https://opendemocracy.net';
     unset($_SESSION['od_referrer_return']);
     $variables['odd_config'] = htmlspecialchars(json_encode([]));
@@ -115,14 +117,20 @@ function oddd_preprocess_node(&$variables) {
       "street_address"  => '',
       "city"            => '',
       "postal_code"     => '',
+      'campaign_target' => 0,
+      'campaign_total'  => 0,
       "country"         => $country, // default to geoip detected country
       "include_address" => (int) ($variables['field_include_address'][0]['value']),
       "mailing_list"    => (int) ($variables['field_mailing_list'][0]['value'] ?? 0),
     ];
 
+    if ($variables['node']->field_campaign['und'][0]['value'] ?? '') {
+      // We have to add campaign data.
+      oddc__add_campaign_funding_data($odd_app_config, $variables['node']->field_campaign['und'][0]['value']);
+    }
+
     if (!empty($_GET['cid']) && !empty($_GET['cs'])) {
       // Looks like we have a contact ID and a checksum.
-      civicrm_initialize();
       oddc__add_contact_data_from_checksum($odd_app_config, $_GET['cid'], $_GET['cs']);
     }
 
@@ -309,4 +317,6 @@ function oddd__add_page_details(&$input, $node) {
   $input['test_mode']       = (int) $node->field_test_mode['und'][0]['value'] ?? 0;
   $input['return_url']      = url("node/$node->nid", ['absolute' => TRUE]);
   $input['thanks_message_template_id'] = (int) $node->field_thank_you_tpl['und'][0]['value'] ?? 0;
+  $input['tweet']           = $node->field_twitter_tweet_text['und'][0]['value'] ?? '';
+  $input['facebook']        = (int) $node->field_facebook['und'][0]['value'] ?? 0;
 }
