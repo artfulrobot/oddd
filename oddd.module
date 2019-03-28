@@ -27,6 +27,11 @@ function oddd_menu()
       'page callback'   => 'oddd__page_ppcallback',
       'access callback' => TRUE,
     ],
+    'image-for/node/%' => [
+      'page callback'   => 'oddd__page_image',
+      'page arguments'  => [2],
+      'access callback' => TRUE,
+    ],
   ];
 }
 /**
@@ -104,6 +109,7 @@ function oddd_preprocess_node(&$variables) {
       'title'           => $variables['title'],
       'nid'             => $variables['nid'],
       'body'            => $variables['body'][0]['safe_value'] ?? '',
+      'standfirst'      => $variables['field_standfirst'][0]['safe_value'] ?? '',
       'extra'           => $variables['field_other_text'][0]['safe_value'] ?? '',
       'regular_or_one'  => $variables['field_regular_one_off'][0]['value'],
       'legal_entity'    => $variables['field_account'][0]['value'],
@@ -299,6 +305,66 @@ function oddd__page_api() {
   header("Content-Type: application/json");
   echo $body;
   drupal_exit();
+}
+
+/**
+ * Page callback for social share image for given node.
+ */
+function oddd__page_image($nid) {
+  $default_image = 'sites/all/themes/aaah/images/oD_logo.png';
+  // if no node id, output default logo
+  $file = DRUPAL_ROOT . $default_image;
+
+  if ($nid) {
+    // try to find the #1 image for the page
+    $entity = node_load($nid);
+    if ($entity) {
+
+      $imgs   = field_get_items( 'node', $entity, 'field_share_image' );
+      if (count($imgs) && !empty($imgs[0]['uri'])) {
+        $file = $imgs[0]['uri'];
+      }
+      $file_type = $imgs[0]['filemime'];
+      $file_size = $imgs[0]['filesize'];
+    }
+  }
+  if (empty($file_type)) {
+    drupal_goto($default_image, [], 302);
+    exit;
+  }
+
+  if (empty($file_type)) $file_type = file_get_mimetype($file);
+  if (empty($file_size)) $file_size = filesize($file);
+
+  $http_headers = array(
+    'Content-Type' => $file_type,
+    // 'Content-Disposition' => 'attachment; filename="' . basename($file) . '"',
+    'Content-Length' => $file_size,
+    'Expires' => 0,
+  );
+
+  if(strpos($_SERVER['HTTP_USER_AGENT'], 'MSIE')) {
+    $http_headers['Cache-Control'] = 'must-revalidate, post-check=0, pre-check=0';
+    $http_headers['Pragma'] = 'public';
+  } else {
+    $http_headers['Pragma'] = 'no-cache';
+  }
+  //  echo "$file <br />"; print_r($http_headers); exit;
+  file_transfer($file, $http_headers);
+  exit;
+
+  header('Content-Description: File Transfer');
+  header('Content-Type: application/octet-stream');
+  header('Content-Disposition: attachment; filename='.basename($file));
+  header('Content-Transfer-Encoding: binary');
+  header('Expires: 0');
+  header('Cache-Control: must-revalidate');
+  header('Pragma: public');
+  header('Content-Length: ' . filesize($file));
+  ob_clean();
+  flush();
+  readfile($file);
+  exit;
 }
 
 

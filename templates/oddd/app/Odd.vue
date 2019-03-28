@@ -1,9 +1,8 @@
 <template>
 <div>
   <div class="odd__container">
-    <div class="odd__page">
-      <div class="odd__body-text" v-html="body" />
-    </div>
+    <div class="odd__standfirst" v-html="standfirst" />
+    <div class="odd__body-text" v-html="body" />
     <div class="odd__forms">
       <div v-if="campaign_target > 0 && campaign_total/campaign_target > 0.1" class="odd__totaliser odd__form">
         <div class="odd__totaliser-bar-target">
@@ -121,6 +120,7 @@ export default {
       'nid' : null,
       'geo' : null,
       'body' : null,
+      'standfirst' : null,
       'extra' : null,
       'source': null,
       'regular_or_one' : null,
@@ -143,7 +143,7 @@ export default {
   created() {
     const vm = this;
     foreach([
-      'title', 'nid', 'geo', 'body', 'extra', 'source', 'regular_or_one', 'presets', 'legal_entity',
+      'title', 'nid', 'geo', 'body', 'standfirst', 'extra', 'source', 'regular_or_one', 'presets', 'legal_entity',
       'geoip', 'first_name', 'last_name', 'email', 'street_address', 'city', 'postal_code',
       'country', 'countries', 'include_address', 'mailing_list', 'campaign_target', 'campaign_total'
     ], field => vm[field] = vm.config[field] );
