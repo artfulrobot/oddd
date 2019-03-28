@@ -4,6 +4,7 @@ $dark_blue: #0061bf;
 $dark_blue_lightened: #408BC5; // From new site.
 $grey_4: #444;
 $grey_6: #888;
+$accent: #b75601;
 @mixin buttons-secondary {
   display: block;
   background-color:white;
@@ -51,7 +52,6 @@ $grey_6: #888;
   }
 }
 
-
 .odd-node-wrapper {
   min-height: calc(100vh - 8rem); // Cover except header.
 }
@@ -92,6 +92,12 @@ $grey_6: #888;
 .odd__body-text {
   font-size: 1.3rem;
   color: #333;
+  img {
+    display:block;
+    margin:1rem 0;
+    max-width:100%;
+    height:auto;
+  }
 }
 .odd__form {
   background-color: $light_blue;
@@ -100,6 +106,54 @@ $grey_6: #888;
   h2 {
     margin: 0 0 1rem;
   }
+}
+
+.odd__totaliser {
+}
+.odd__totaliser-bar-target {
+  background:white;
+  height:1.5rem;
+  position:relative;
+}
+.odd__totaliser-bar-total {
+  text-align:right;
+  padding-right:0.5rem;
+  color:white;
+  background: $accent;
+  height:1.5rem;
+  position: absolute;
+  animation: totaliserBounce 0.9s 1s;
+  animation-fill-mode: backwards;
+  transform-origin: left top;
+  &>span {
+    animation: totaliserText 0.3s 1.8s;
+    animation-fill-mode: backwards;
+  }
+}
+.odd__totaliser-text {
+  font-size: 0.8rem;
+  letter-spacing: 1px;
+  color: #9B9B9B;
+}
+@keyframes totaliserText {
+  from { opacity:0; }
+  to { opacity:1; }
+}
+@keyframes totaliserBounce {
+  from,
+  20%,
+  40%,
+  60%,
+  80%,
+  to {
+    animation-timing-function: cubic-bezier(0.215, 0.61, 0.355, 1);
+  }
+  0% { transform: scaleX(0); }
+  20% { transform: scaleX(1.1); }
+  40% { transform: scaleX(0.9); }
+  60% { transform: scaleX(1.03); }
+  80% { transform: scaleX(0.97); }
+  to { transform: scaleX(1); }
 }
 @media screen and (min-width: 400px) {
   .odd__page {
@@ -118,8 +172,8 @@ $grey_6: #888;
     width:100%;
     @include buttons;
     // Reduce padding, otherwise "a month" doesn't fit.
-    padding-left: 1.6rem;
-    padding-right: 1.6rem;
+    padding: 0.9rem 1.6rem;
+    font-size:1.6rem;
   }
 }
 .odd__buttons__a-month {
@@ -135,6 +189,7 @@ $grey_6: #888;
 .odd__amount-other {
   display: flex;
   margin-bottom: 1rem;
+  align-items: center;
   label { flex:0 0 auto; padding-right:1rem;}
   .odd__amount-other-input {
     flex:1 1 auto;
@@ -173,6 +228,8 @@ $grey_6: #888;
     flex: 1 1 auto;
     margin:0;
     padding-right:1.5rem;
+    padding-top:1rem;
+    padding-bottom:1rem;
   }
 
   button {
@@ -182,7 +239,7 @@ $grey_6: #888;
   }
 }
 .odd__back-button {
-  @include buttons-secondary;
+//  @include buttons-secondary;
 }
 .odd__next-button {
   @include buttons-secondary;
@@ -209,4 +266,39 @@ $grey_6: #888;
 }
 .odd__opentrust {
   font-size: (12rem/16);
+}
+.odd-social-wrapper {
+}
+.odd-social-company {
+  display: inline-block;
+  width: 3rem;
+  margin-right:1rem;
+  &>a {
+    border-radius:50%;
+    display:inline-block;
+    width: 3rem;
+    height: 3rem;
+    border:solid 1px $dark_blue;
+    background-color:white;
+
+    // For svg.
+    fill: $dark_blue;
+
+    &>svg {
+      margin-top: 14px;
+      margin-left: 14px;
+    }
+
+    &:hover {
+      border:solid 1px $dark_blue_lightened;
+      fill: $dark_blue_lightened;
+    }
+  }
+}
+.odd__fsb {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  &>a { flex:0 0 auto; color:#555; font-size:0.8rem; text-transform:uppercase; cursor: pointer; }
+  &>div { flex:1 1 auto; padding-right:1rem; text-align:left; }
 }

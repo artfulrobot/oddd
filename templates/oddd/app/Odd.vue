@@ -5,6 +5,14 @@
       <div class="odd__body-text" v-html="body" />
     </div>
     <div class="odd__forms">
+      <div v-if="campaign_target > 0 && campaign_total/campaign_target > 0.1" class="odd__totaliser odd__form">
+        <div class="odd__totaliser-bar-target">
+          <div class="odd__totaliser-bar-total" :style="totaliser_style"><span>{{campaign_total|currency}}</span></div>
+        </div>
+        <div class="odd__totaliser-text" >
+          Raised {{campaign_total|currency}} of {{campaign_target|currency}}
+        </div>
+      </div>
       <div v-if="regular_or_one[1] === 'r' && step==='step1'" class="odd__form">
 
         <h2>Make a regular donation</h2>
@@ -14,7 +22,7 @@
                  @finished="amountPresetClicked($event, 'regular')"
                  ></amounts>
 
-        <p>Regular support makes the biggest difference. It means we can keep people in jobs, doing more ambitious, long-term investigations – the 'heavy lifting' that most newspapers don't do any more. Thank you.</p>
+        <p>Regular support makes the biggest difference. It means we do more ambitious, long-term investigations – the ‘heavy lifting’ that most newspapers don't do any more. Thank you.</p>
 
         <button :disabled="!amount_regular" class="odd__next-button" @click.prevent="moveToStep2('regular', amount_regular)">Next</button>
       </div>
@@ -32,7 +40,10 @@
 
       <div v-show="step==='step2'" class="odd__form">
         <h2>{{box_title}}</h2>
-        <button @click.prevent="step='step1';recur=null;"  class="odd__back-button" >Back</button>
+        <div class="odd__fsb">
+          <div>{{currency_symbol}}{{amount}} {{ recur === 'regular' ? 'each month' : 'donation' }}</div>
+          <a @click.prevent="step='step1';recur=null;"  class="odd__back-button" >&lt; Back</a>
+        </div>
         <name-address
           @updated="updateNameAddress"
           v-bind="{geo, first_name, last_name, email, street_address, city, postal_code, country, countries, include_address, errors}"
@@ -104,6 +115,8 @@ export default {
 
       test_mode: false,
 
+      campaign_target: 0,
+      campaign_total : 0,
       'title' : null,
       'nid' : null,
       'geo' : null,
@@ -132,7 +145,7 @@ export default {
     foreach([
       'title', 'nid', 'geo', 'body', 'extra', 'source', 'regular_or_one', 'presets', 'legal_entity',
       'geoip', 'first_name', 'last_name', 'email', 'street_address', 'city', 'postal_code',
-      'country', 'countries', 'include_address', 'mailing_list'
+      'country', 'countries', 'include_address', 'mailing_list', 'campaign_target', 'campaign_total'
     ], field => vm[field] = vm.config[field] );
 
     // Check what currencies are in use by presets.
@@ -174,6 +187,26 @@ export default {
   computed: {
     box_title() {
       return this.recur === 'regular' ? 'Make a regular donation' : 'Make a single donation';
+    },
+    amount() {
+      return this['amount_' + this.recur];
+    },
+    currency_symbol() {
+      return {'GBP': '£', 'USD': '$', 'EUR': '€'}[this.currency];
+    },
+    totaliser_style() {
+      if (!this.campaign_target) {
+        return {};
+      }
+      var t = Math.floor(this.campaign_total * 100 / this.campaign_target);
+      return {
+        width: t + '%',
+      };
+    }
+  },
+  filters: {
+    currency(x) {
+      return '£' + x.toLocaleString();
     }
   },
   methods: {
