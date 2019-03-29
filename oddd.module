@@ -16,6 +16,13 @@ use GeoIp2\Database\Reader;
 function oddd_menu()
 {
   return [
+    // Settings page.
+    'admin/config/oddd' => [
+      'title'            => t('Donation Pages'),
+      'page callback'    => 'drupal_get_form',
+      'page arguments'   => ['oddd__form_config'],
+      'access arguments' => ['edit any donation_page content'],
+    ],
     // JSON API
     'oddd/api' => [
       'page callback'   => 'oddd__page_api',
@@ -128,6 +135,9 @@ function oddd_preprocess_node(&$variables) {
       "country"         => $country, // default to geoip detected country
       "include_address" => (int) ($variables['field_include_address'][0]['value']),
       "mailing_list"    => (int) ($variables['field_mailing_list'][0]['value'] ?? 0),
+			"regular_push"    =>   ($variables['field_regular_push'][0]['value'] ?? '')
+														? $variables['field_regular_push'][0]['value']
+														: variable_get('oddd_default_regular_push', ''),
     ];
 
     if ($variables['node']->field_campaign['und'][0]['value'] ?? '') {
@@ -367,6 +377,29 @@ function oddd__page_image($nid) {
   exit;
 }
 
+/**
+ * Settings form at admin/config/oddd
+ */
+function oddd__form_config() {
+
+  $form['oddd_default_regular_push'] = [
+    '#prefix' => '<p>This affects the Donation Pages. Helpful links:</p><ul>
+				<li><a href="/admin/content/donation-pages">Content » Donation Pages</a> lists all pages.</li>
+				<li><a href="/node/add/donation-page">Content » Add » Donation Page</a> to add a new donation page</li>
+				<li><a href="/civicrm/campaign?reset=1" >CiviCRM » Campaigns » Dashboard</a> to administer Campaigns, inc. adding/editing campaigns and setting targets (for toalisers).</li>
+				<li><a href="/civicrm/dataviz/odd" >Interactive donations charts</a></li>
+				<li><a href="https://docs.google.com/document/d/1PO6yX0FQyIIOIXk2R1uVGVTjA-MB0f9eWHhF8QbrOLA/edit" >Documentation</a> - Google Doc.</li>
+			</ul>',
+    '#type'          => 'textarea',
+    '#rows'          => 2,
+    '#columns'       => 60,
+    '#title'         => t('Default text to push regular over one offs'),
+    '#default_value' => variable_get('oddd_default_regular_push', 'Regular support makes the biggest difference. It means we do more ambitious, long-term investigations – the ‘heavy lifting’ that most newspapers don’t do any more. Thank you.'),
+    '#required'      => true,
+  ];
+
+  return system_settings_form($form);
+}
 
 /**
  * Augment incoming data with data from node.

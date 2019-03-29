@@ -21,7 +21,7 @@
                  @finished="amountPresetClicked($event, 'regular')"
                  ></amounts>
 
-        <p>Regular support makes the biggest difference. It means we do more ambitious, long-term investigations – the ‘heavy lifting’ that most newspapers don't do any more. Thank you.</p>
+        <p v-if="regular_push">{{regular_push}}</p>
 
         <button :disabled="!amount_regular" class="odd__next-button" @click.prevent="moveToStep2('regular', amount_regular)">Next</button>
       </div>
@@ -88,7 +88,7 @@
     </div>
   </div>
   <div class="odd__extra-wrapper">
-    <a class="show-more" href v-if="extra && !showExtra" @click.prevent="showExtra = true">Other Ways To Give</a>
+    <button class="show-more" href v-if="extra && !showExtra" @click.prevent="showExtra = true">Other ways to give</button>
     <div class="odd__extra-text" v-html="extra" v-show="showExtra"/>
   </div>
 </div>
@@ -137,6 +137,7 @@ export default {
       'countries': null,
       'include_address': null,
       'mailing_list': null,
+			'regular_push': null,
     };
   },
   props: [ 'config' ],
@@ -145,7 +146,8 @@ export default {
     foreach([
       'title', 'nid', 'geo', 'body', 'standfirst', 'extra', 'source', 'regular_or_one', 'presets', 'legal_entity',
       'geoip', 'first_name', 'last_name', 'email', 'street_address', 'city', 'postal_code',
-      'country', 'countries', 'include_address', 'mailing_list', 'campaign_target', 'campaign_total'
+      'country', 'countries', 'include_address', 'mailing_list', 'campaign_target', 'campaign_total',
+			'regular_push'
     ], field => vm[field] = vm.config[field] );
 
     // Check what currencies are in use by presets.

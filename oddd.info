@@ -1,5 +1,6 @@
-name = Artful Robot Custom Donate
-description = "Testing module"
+name = oD custom Donation Pages
+description = "Bespoke Drupal module for oD's custom donation pages. Nb. requires the sister CiviCRM extension."
 core = 7.x
+configure = admin/config/oddd
 files[] = oddd.module
 files[] = oddd.install

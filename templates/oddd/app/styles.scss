@@ -254,8 +254,15 @@ $accent: #b75601;
 }
 .odd__extra-wrapper {
   margin-top: 2rem;
-  a.show-more {
-    letter-spacing: 1px; font-size: 12px;
+  button.show-more {
+    @include buttons-secondary;
+    border-color: #747474;
+    color: #747474;
+    text-transform: none;
+    &:hover {
+      color: $dark_blue;
+      border-color: $dark_blue;
+    }
   }
 }
 .odd__opentrust {
