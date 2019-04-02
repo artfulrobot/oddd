@@ -48,7 +48,6 @@ $accent: #b75601;
   &.selected {
     background-color: white;
     color: $dark_blue;
-    font-weight: bold;
   }
 }
 
@@ -237,9 +236,32 @@ $accent: #b75601;
 .odd__back-button {
 //  @include buttons-secondary;
 }
+.odd__next {
+  display:flex;
+  align-items: center;
+}
+.odd__tooltip {
+  flex: 1 1 auto;
+  padding-right:0.5rem;
+  text-align:right;
+}
+// transition for tooltip.
+.bounce-enter-active {
+  animation: "bounce-tooltip" .5s ease;
+}
+@keyframes bounce-tooltip {
+  0%   { opacity: 0; transform: translateX(-8px); }
+  100% { opacity: 1; transform: none; }
+}
+.bounce-leave-active {
+  transition: all .5s ease;
+}
+.bounce-leave { opacity: 1; }
+.bounce-leave-to { opacity: 0; }
+
 .odd__next-button {
   @include buttons-secondary;
-  margin:0 0 0 auto;
+  flex: 0 0 autp;
 }
 .odd__checkbox {
   display:flex;

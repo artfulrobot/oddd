@@ -19,7 +19,19 @@
 
     <p v-if="regular_push">{{regular_push}}</p>
 
-    <button :disabled="!amount_regular" class="odd__next-button" @click.prevent="moveToStep2('regular', amount_regular)">Next</button>
+    <div class="odd__next">
+      <div class="odd__tooltip" >
+        <transition name="bounce">
+        <div v-show="show_regular_tooltip">Please enter an amount.</div>
+        </transition>
+      </div>
+      <button
+        :disabled="!amount_regular"
+        class="odd__next-button"
+        @mouseover="considerTooltip('regular')"
+        @mouseleave="show_regular_tooltip=false"
+        @click.prevent="moveToStep2('regular', amount_regular)">Next</button>
+    </div>
   </div>
 
   <div v-if="show_oneoff && step==='step1'" class="odd__form">
@@ -29,7 +41,21 @@
               @updated="updateAmount($event, 'oneoff')"
               @finished="amountPresetClicked($event, 'oneoff')"
               ></amounts>
-    <button :disabled="!amount_oneoff" class="odd__next-button" @click.prevent="moveToStep2('oneoff', amount_oneoff)">Next</button>
+
+    <div class="odd__next">
+      <div class="odd__tooltip" >
+        <transition name="bounce">
+          <div v-show="show_oneoff_tooltip">Please enter an amount.</div>
+        </transition>
+      </div>
+      <button
+        :disabled="!amount_oneoff"
+        class="odd__next-button"
+        @mouseover="considerTooltip('oneoff')"
+        @mouseleave="show_oneoff_tooltip=false"
+        @click.prevent="moveToStep2('oneoff', amount_oneoff)"
+        >Next</button>
+    </div>
   </div>
 
 
@@ -128,6 +154,8 @@ export default {
       'mailing_list': null,
 			'regular_push': null,
       'formId': null,
+      show_regular_tooltip: false,
+      show_oneoff_tooltip: false,
     };
   },
   props: [ 'config', 'show_regular', 'show_oneoff', 'isMobile' ],
@@ -205,6 +233,9 @@ export default {
     }
   },
   methods: {
+    considerTooltip(recur) {
+      this['show_' + recur + '_tooltip'] = (!this['amount_' + recur]);
+    },
     setStep(newStep) {
       this.step = newStep;
       if (this.isMobile) {
@@ -215,7 +246,7 @@ export default {
     updateAmount(e, recur) {
       // This fires with 'undefined' amount when the subcomponent is destroyed
       // which we need to avoid.
-      if (e.amount) {
+      if ("amount" in e) {
         this['amount_' + recur] = e.amount;
       }
       this.currency=e.currency;
