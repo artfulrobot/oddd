@@ -25,12 +25,15 @@
         <div v-show="show_regular_tooltip">Please enter an amount.</div>
         </transition>
       </div>
-      <button
-        :disabled="!amount_regular"
-        class="odd__next-button"
-        @mouseover="considerTooltip('regular')"
-        @mouseleave="show_regular_tooltip=false"
-        @click.prevent="moveToStep2('regular', amount_regular)">Next</button>
+      <div class="odd__next-button-wrapper"
+           @mouseenter="mouse_over_regular = true"
+           @mouseleave="mouse_over_regular = false"
+        >
+        <button
+           :disabled="!amount_regular"
+           class="odd__next-button"
+           @click.prevent="moveToStep2('regular', amount_regular)">Next</button>
+      </div>
     </div>
   </div>
 
@@ -48,13 +51,16 @@
           <div v-show="show_oneoff_tooltip">Please enter an amount.</div>
         </transition>
       </div>
-      <button
-        :disabled="!amount_oneoff"
-        class="odd__next-button"
-        @mouseover="considerTooltip('oneoff')"
-        @mouseleave="show_oneoff_tooltip=false"
-        @click.prevent="moveToStep2('oneoff', amount_oneoff)"
-        >Next</button>
+      <div class="odd__next-button-wrapper"
+           @mouseenter="mouse_over_oneoff = true"
+           @mouseleave="mouse_over_oneoff = false"
+        >
+        <button
+          :disabled="!amount_oneoff"
+          class="odd__next-button"
+          @click.prevent="moveToStep2('oneoff', amount_oneoff)"
+          >Next</button>
+      </div>
     </div>
   </div>
 
@@ -154,8 +160,8 @@ export default {
       'mailing_list': null,
 			'regular_push': null,
       'formId': null,
-      show_regular_tooltip: false,
-      show_oneoff_tooltip: false,
+      mouse_over_regular: false,
+      mouse_over_oneoff: false,
     };
   },
   props: [ 'config', 'show_regular', 'show_oneoff', 'isMobile' ],
@@ -225,7 +231,13 @@ export default {
       return {
         width: t + '%',
       };
-    }
+    },
+    show_regular_tooltip() {
+      return this.mouse_over_regular && (!this.amount_regular);
+    },
+    show_oneoff_tooltip() {
+      return this.mouse_over_oneoff && (!this.amount_oneoff);
+    },
   },
   filters: {
     currency(x) {
@@ -234,6 +246,7 @@ export default {
   },
   methods: {
     considerTooltip(recur) {
+      console.log("considerTooltip");
       this['show_' + recur + '_tooltip'] = (!this['amount_' + recur]);
     },
     setStep(newStep) {

@@ -247,7 +247,7 @@ $accent: #b75601;
 }
 // transition for tooltip.
 .bounce-enter-active {
-  animation: "bounce-tooltip" .5s ease;
+  animation: bounce-tooltip .5s ease;
 }
 @keyframes bounce-tooltip {
   0%   { opacity: 0; transform: translateX(-8px); }
@@ -259,9 +259,11 @@ $accent: #b75601;
 .bounce-leave { opacity: 1; }
 .bounce-leave-to { opacity: 0; }
 
+.odd__next-button-wrapper {
+  flex: 0 0 auto;
+}
 .odd__next-button {
   @include buttons-secondary;
-  flex: 0 0 autp;
 }
 .odd__checkbox {
   display:flex;
