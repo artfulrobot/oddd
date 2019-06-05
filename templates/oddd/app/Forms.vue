@@ -272,7 +272,7 @@ export default {
     updateNameAddress(e) {
       const vm=this;
       foreach(['first_name', 'last_name', 'email', 'street_address', 'city', 'postal_code', 'country'],
-        fld => vm[fld] = e[fld]);
+        fld => vm[fld] = (e[fld] ? e[fld].replace(/^\s*(.*?)\s*$/, '$1') : ''));
     },
     moveToStep2(recur, amount) {
       console.log("moveToStep2", amount);
