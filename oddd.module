@@ -112,12 +112,30 @@ function oddd_preprocess_node(&$variables) {
 
     $variables['thanks'] = 0;
 
+    // Other ways text.
+    $extra = '';
+    if ($variables['field_account'][0]['value'] === 'company') {
+      $_ = 'oddd_company_other_ways_text';
+    }
+    elseif ($variables['field_account'][0]['value'] === 'charity') {
+      $_ = 'oddd_charity_other_ways_text';
+    }
+    if ($_) {
+      $_ = variable_get($_, ['format' => 'formatted', 'value'=> '']);
+      $extra = check_markup($_['value'], $_['format']);
+    }
+
+    // Provided text overrides default.
+    if (!empty($variables['field_other_text'][0]['safe_value'])) {
+      $extra = $variables['field_other_text'][0]['safe_value'];
+    }
+
     $odd_app_config = [
       'title'           => $variables['title'],
       'nid'             => $variables['nid'],
       'body'            => $variables['body'][0]['safe_value'] ?? '',
       'standfirst'      => $variables['field_standfirst'][0]['safe_value'] ?? '',
-      'extra'           => $variables['field_other_text'][0]['safe_value'] ?? '',
+      'extra'           => $extra,
       'regular_or_one'  => $variables['field_regular_one_off'][0]['value'],
       'legal_entity'    => $variables['field_account'][0]['value'],
       'presets'         => json_decode($variables['field_presets'][0]['value']),
@@ -398,6 +416,24 @@ function oddd__form_config() {
     '#required'      => true,
   ];
 
+  $default = variable_get('oddd_charity_other_ways_text', ['format' => 'formatted', 'value' => '']);
+
+  $form['oddd_charity_other_ways_text'] = [
+    '#type'          => 'text_format',
+    '#format'        => $default['format'] ?? 'formatted',
+    '#default_value' => $default['value'] ?? '',
+    '#rows'          => 15,
+    '#title'         => 'Charity: Other Ways To Give text',
+  ];
+
+  $default = variable_get('oddd_company_other_ways_text', ['format' => 'formatted', 'value' => '']);
+  $form['oddd_company_other_ways_text'] = [
+    '#type'          => 'text_format',
+    '#format'        => $default['format'] ?? 'formatted',
+    '#default_value' => $default['value'] ?? '',
+    '#rows'          => 15,
+    '#title'         => 'Company: Other Ways To Give text',
+  ];
   return system_settings_form($form);
 }
 
