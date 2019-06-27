@@ -1,6 +1,7 @@
 <template>
 <div>
   <div class="odd__container">
+    <mark v-if="config.mode == 'test'" class="odd__test-mode">Test mode active!</mark>
     <div class="odd__standfirst" v-html="standfirst" />
     <div class="odd__mobile-top-forms">
       <forms

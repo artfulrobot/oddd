@@ -50,7 +50,18 @@ $accent: #b75601;
     color: $dark_blue;
   }
 }
-
+mark.odd__test-mode {
+	position: fixed;
+	z-index: 2;
+	left: 0;
+	top: 50%;
+	background-color: #ff3533;
+	color: black;
+	padding: 0.5rem 2rem;
+	transform: rotateZ(-90deg) translateX(-50%);
+	transform-origin: top left;
+  &:hover { opacity: 0.1; }
+}
 .odd-node-wrapper {
   min-height: calc(100vh - 8rem); // Cover except header.
 }

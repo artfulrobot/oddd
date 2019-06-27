@@ -146,6 +146,7 @@ function oddd_preprocess_node(&$variables) {
       'prefill_amount'  => $_GET['amount'] ?? '',
       'geo'             => $country,
       "email"           => '',
+      'mode'            => ($variables['field_test_mode'][0]['value'] ?? 0) ? 'test' : 'live',
       "first_name"      => '',
       "street_address"  => '',
       "city"            => '',
