@@ -33,7 +33,7 @@
         <input :id="id + '_street_address'"
            v-model='workingData.street_address'
           name="street_address"
-          autcomplete="billing street-address" />
+          autocomplete="street-address" />
         <div v-if="errors.street_address" class="invalid-msg">{{errors.street_address}}</div>
       </div>
       <div class="odd__input-pair" :class="{invalid: !!errors.city}">
@@ -42,7 +42,7 @@
           <input :id="id + '_city'"
              v-model='workingData.city'
              name="city"
-             autocomplete="billing address-line3"
+             autocomplete="address-level2"
              />
           <div v-if="errors.city" class="invalid-msg">{{errors.city}}</div>
         </div>
@@ -51,7 +51,7 @@
           <input :id="id + '_postal_code'"
              v-model='workingData.postal_code'
              name="postal_code"
-             autocomplete="billing postal-code"
+             autocomplete="postal-code"
              />
           <div v-if="errors.postal_code" class="invalid-msg">{{errors.postal_code}}</div>
         </div>

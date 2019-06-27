@@ -126,9 +126,11 @@ function oddd_preprocess_node(&$variables) {
     }
 
     // Provided text overrides default.
+    /*
     if (!empty($variables['field_other_text'][0]['safe_value'])) {
       $extra = $variables['field_other_text'][0]['safe_value'];
     }
+     */
 
     $odd_app_config = [
       'title'           => $variables['title'],
