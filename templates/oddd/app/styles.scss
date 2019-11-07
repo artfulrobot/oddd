@@ -50,6 +50,15 @@ $accent: #b75601;
     color: $dark_blue;
   }
 }
+@keyframes obvious {
+  0% { border-color: #fdd;}
+  50% { border-color: #e00;}
+  100% { border-color: #fdd;}
+}
+body.od-test-mode {
+  border: solid 1rem #e00;
+  animation: obvious 1s infinite;
+}
 mark.odd__test-mode {
 	position: fixed;
 	z-index: 2;

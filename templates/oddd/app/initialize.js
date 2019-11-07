@@ -9,5 +9,8 @@ document.addEventListener('DOMContentLoaded', () => {
       'el': this,
       render: h => h(Odd, {props: {config: c}})
     });
+    if (c.mode === 'test') {
+      jQuery('body').addClass('od-test-mode');
+    }
   })
 });
