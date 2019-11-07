@@ -64,7 +64,6 @@
     </div>
   </div>
 
-
   <div v-show="step==='step2'" class="odd__form">
     <h2>{{box_title}}</h2>
     <div class="odd__fsb">
@@ -116,10 +115,10 @@
 </div>
 </template>
 <script>
-var foreach = require('lodash/forEach');
 import Axios from 'axios';
 import Amounts from './Amounts.vue';
 import NameAddress from './NameAddress.vue';
+var foreach = require('lodash/forEach');
 export default {
   components: {Amounts, NameAddress},
   data() {
@@ -158,7 +157,7 @@ export default {
       'countries': null,
       'include_address': null,
       'mailing_list': null,
-			'regular_push': null,
+      'regular_push': null,
       'formId': null,
       mouse_over_regular: false,
       mouse_over_oneoff: false,
@@ -171,14 +170,14 @@ export default {
       'title', 'nid', 'geo', 'body', 'standfirst', 'extra', 'source', 'regular_or_one', 'presets', 'legal_entity',
       'geoip', 'first_name', 'last_name', 'email', 'street_address', 'city', 'postal_code',
       'country', 'countries', 'include_address', 'mailing_list', 'campaign_target', 'campaign_total',
-			'regular_push'
-    ], field => vm[field] = vm.config[field] );
+      'regular_push'
+    ], field => { vm[field] = vm.config[field]; } );
 
     // Check what currencies are in use by presets.
     var presetsInUse = [];
     function collect(presets) {
       if (presets) {
-        foreach(presets, (p, currency) => { if (p.length) {presetsInUse.push(currency);} });
+        foreach(presets, (p, currency) => { if (p.length) { presetsInUse.push(currency); } });
       }
     }
     collect(this.config.presets.oneoff);
@@ -204,15 +203,14 @@ export default {
           amount: m[1],
           currency: m[2]
         });
-      }
-      else {
-        console.log("no match", vm.config.prefill_amount);
+      } else {
+        //console.log("no match", vm.config.prefill_amount);
       }
     }
   },
-	mounted() {
+  mounted() {
     this.formId = this._uid;
-	},
+  },
   computed: {
     box_title() {
       return this.recur === 'regular' ? 'Make a regular donation' : 'Make a single donation';
@@ -272,10 +270,10 @@ export default {
     updateNameAddress(e) {
       const vm=this;
       foreach(['first_name', 'last_name', 'email', 'street_address', 'city', 'postal_code', 'country'],
-        fld => vm[fld] = (e[fld] ? e[fld].replace(/^\s*(.*?)\s*$/, '$1') : ''));
+        fld => { vm[fld] = (e[fld] ? e[fld].replace(/^\s*(.*?)\s*$/, '$1') : ''); } );
     },
     moveToStep2(recur, amount) {
-      console.log("moveToStep2", amount);
+      //console.log("moveToStep2", amount);
       if (!amount.match(/^\d+(\.\d?\d?)?$/)) {
         alert("Please correct amount.");
         return;
@@ -337,11 +335,11 @@ export default {
       data.consent = this.consent ? 1 : 0;
       data.is_recur = (this.recur === 'regular') ? 1 : 0;
       data.test_mode = this.test_mode;
-      console.log("sending", data);
+      //console.log("sending", data);
 
       Axios.post('/oddd/api', data)
       .then(response => {
-        console.log("got response", response);
+        //console.log("got response", response);
         if (response.data.url) {
           window.location = response.data.url;
         }
@@ -354,11 +352,9 @@ export default {
           if (error.response.data && error.response.data.user_error) {
             user_message = error.response.data.user_error;
           }
-        }
-        else if (error.request) {
+        } else if (error.request) {
           console.log('Request made but no response', error);
-        }
-        else {
+        } else {
           console.log('Network error');
         }
         this.setStep('step2');
@@ -366,6 +362,5 @@ export default {
       });
     }
   },
-}
+};
 </script>
-

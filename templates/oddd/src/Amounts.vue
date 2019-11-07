@@ -1,7 +1,7 @@
 <template>
   <div>
     <div class="odd__buttons">
-      <div v-for="a in presets" class="odd__button-wrapper">
+      <div v-for="a in presets" class="odd__button-wrapper" :key="a">
         <button @click.prevent="selectAmount(a)"
                 class="odd__button"
                 :class="{ selected: a==local_amount }"
@@ -39,7 +39,7 @@ export default {
   props: ['allPresets', 'currency', 'recur', 'geo', 'amount'],
   computed: {
     presets() {
-      return this.allPresets[this.recur] && this.allPresets[this.recur][this.local_currency] || [];
+      return (this.allPresets[this.recur] && this.allPresets[this.recur][this.local_currency]) || [];
     },
     currency_symbol() {
       return {'GBP': '£', 'USD': '$', 'EUR': '€'}[this.local_currency];
@@ -53,9 +53,7 @@ export default {
   },
   methods: {
     selectAmount(a) {
-      console.log("setting amount...", a);
       this.local_amount = a;
-      console.log("...emitting 'finished'");
       this.$emit('finished', {amount: this.local_amount, currency: this.local_currency});
     }
   },

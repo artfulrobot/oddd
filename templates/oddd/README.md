@@ -1,28 +1,21 @@
-# Brunch + Babel/ES6
+# oddd4
 
-This is a modern JS skeleton for [Brunch](http://brunch.io).
+> A Vue.js project
 
-## Installation
+## Build Setup
 
-Clone this repo manually or use `brunch new dir -s es6`
+``` bash
+# install dependencies
+npm install
 
-## Getting started
+# serve with hot reload at localhost:8080
+npm run dev
 
-* Install (if you don't have them):
-    * [Node.js](http://nodejs.org): `brew install node` on OS X
-    * [Brunch](http://brunch.io): `npm install -g brunch`
-    * Brunch plugins and app dependencies: `npm install`
-* Run:
-    * `npm start` — watches the project with continuous rebuild. This will also launch HTTP server with [pushState](https://developer.mozilla.org/en-US/docs/Web/Guide/API/DOM/Manipulating_the_browser_history).
-    * `npm run build` — builds minified project for production
-* Learn:
-    * `public/` dir is fully auto-generated and served by HTTP server.  Write your code in `app/` dir.
-    * Place static files you want to be copied from `app/assets/` to `public/`.
-    * [Brunch site](http://brunch.io), [Getting started guide](https://github.com/brunch/brunch-guide#readme)
+# build for production with minification
+npm run build
 
-## ES-next
+# build for production and view the bundle analyzer report
+npm run build --report
+```
 
-To use proposed JS features not included into ES6, do this:
-
-* `npm install --save-dev babel-preset-stage-0`
-* in `brunch-config.js`, add the preset: `presets: ['latest', 'stage-0']`
+For a detailed explanation on how things work, check out the [guide](http://vuejs-templates.github.io/webpack/) and [docs for vue-loader](http://vuejs.github.io/vue-loader).

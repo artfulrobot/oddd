@@ -59,7 +59,7 @@
       <div class="odd__selectfield" v-if="geo !== 'GB'">
         <label :for="id+'_country'">Country</label>
         <select v-model='workingData.country' :id="id+'_country'">
-          <option v-for="(name, code) in countries" :value="code" >{{name}}</option>
+          <option v-for="(name, code) in countries" :value="code" :key="code">{{name}}</option>
         </select>
       </div>
     </div>
@@ -89,7 +89,6 @@ export default {
   ],
   mounted () {
     this.id = this._uid;
-    //console.log("mounted1, workingData is ", JSON.stringify(this.workingData));
     this.workingData = {
       'first_name': this.first_name,
       'last_name': this.last_name,
@@ -99,16 +98,13 @@ export default {
       'postal_code': this.postal_code,
       'country': this.country,
     };
-    //console.log("mounted2, workingData is ", JSON.stringify(this.workingData));
   },
   watch: {
     workingData: {
       handler(new_val) {
-        //console.log("watch changed workingData");
         this.$emit('updated', new_val);
-        //console.log("watch changed workingData ends");
       },
-      deep: 1,
+      deep: 1
     }
   }
 };

@@ -2,7 +2,7 @@
 <div>
   <div class="odd__container">
     <mark v-if="config.mode == 'test'" class="odd__test-mode">Test mode active!</mark>
-    <div class="odd__standfirst" v-html="standfirst" />
+    <div class="odd__standfirst" v-html="processedStandfirst" />
     <div class="odd__mobile-top-forms">
       <forms
         v-if="isMobile && config.regular_or_one[1] === 'r'"
@@ -28,12 +28,9 @@
 </div>
 </template>
 <script>
+import Forms from './Forms.vue';
 var foreach = require('lodash/forEach');
 var debounce = require('lodash/debounce');
-import Forms from './Forms.vue';
-import Axios from 'axios';
-import Amounts from './Amounts.vue';
-import NameAddress from './NameAddress.vue';
 export default {
   components: {Forms},
   data() {
@@ -42,7 +39,6 @@ export default {
       standfirst: null,
       body: null,
       extra : null,
-      showExtra: false,
       isMobile: false,
     };
   },
@@ -51,18 +47,23 @@ export default {
     const vm = this;
     foreach([
       'body', 'standfirst', 'extra'
-    ], field => vm[field] = vm.config[field] );
+    ], field => { vm[field] = vm.config[field]; } );
 
     // We need to detect mobile.
     window.addEventListener('resize', debounce(e => { vm.detectMobile(); }, 100));
     this.detectMobile();
   },
   computed: {
+    processedStandfirst() {
+      var dummy = document.createElement('div');
+      dummy.textContent = this.config.giving;
+      return this.standfirst.replace('{contact.currentRegularGiving}', dummy.innerHTML );
+    }
   },
   methods: {
     detectMobile() {
       this.isMobile = window.matchMedia('screen and (max-width: 767px)').matches;
     }
   },
-}
+};
 </script>
