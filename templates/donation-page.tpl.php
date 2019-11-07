@@ -1,4 +1,4 @@
-<div class="odd-node-wrapper" style="<?php print $background;?>">
+<div class="odd-node-wrapper <?php print empty($field_test_mode[0]['value']) ? : 'test-mode';?>" style="<?php print $background;?>">
   <div class="odd-node" id="odd-id-<?php print $nid;?>" data-config="<?php print ($odd_config) ;?>">
     <noscript>This page needs Javascript</noscript>
     <?php if ($thanks):?>
