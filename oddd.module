@@ -307,7 +307,7 @@ function oddd__page_api() {
   }
 
   // Each request identifies itself with a nid, so we can look up various details directly from the node.
-  $nid = (int) $input['nid'] ?? 0;
+  $nid = (int) ($input['nid'] ?? 0);
   if (!$nid) {
     header("$_SERVER[SERVER_PROTOCOL] 400 Invalid request");
     $body = '{"error": "Invalid request err1"}';
@@ -454,6 +454,7 @@ function oddd__add_page_details(&$input, $node) {
   $input['mailing_list']    = $node->field_mailing_list['und'][0]['value'] ?? 0;
   $input['test_mode']       = (int) $node->field_test_mode['und'][0]['value'] ?? 0;
   $input['return_url']      = url("node/$node->nid", ['absolute' => TRUE]);
+  $input['donation_page_nid'] = $node->nid;
   $input['thanks_message_template_id'] = (int) $node->field_thank_you_tpl['und'][0]['value'] ?? 0;
   $input['tweet']           = $node->field_twitter_tweet_text['und'][0]['value'] ?? '';
   $input['facebook']        = (int) $node->field_facebook['und'][0]['value'] ?? 0;
