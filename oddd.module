@@ -458,10 +458,11 @@ function oddd__add_page_details(&$input, $node) {
   $input['campaign']        = $node->field_campaign['und'][0]['value'] ?? '';
   $input['include_address'] = $node->field_include_address['und'][0]['value'] ?? 0;
   $input['mailing_list']    = $node->field_mailing_list['und'][0]['value'] ?? 0;
-  $input['test_mode']       = (int) $node->field_test_mode['und'][0]['value'] ?? 0;
+  $input['test_mode']       = (int) ($node->field_test_mode['und'][0]['value'] ?? 0);
+  $input['is_upgrade']      = (int) ($node->field_is_upgrade['und'][0]['value'] ?? 0);
   $input['return_url']      = url("node/$node->nid", ['absolute' => TRUE]);
   $input['donation_page_nid'] = $node->nid;
-  $input['thanks_message_template_id'] = (int) $node->field_thank_you_tpl['und'][0]['value'] ?? 0;
+  $input['thanks_message_template_id'] = (int) ($node->field_thank_you_tpl['und'][0]['value'] ?? 0);
   $input['tweet']           = $node->field_twitter_tweet_text['und'][0]['value'] ?? '';
-  $input['facebook']        = (int) $node->field_facebook['und'][0]['value'] ?? 0;
+  $input['facebook']        = (int) ($node->field_facebook['und'][0]['value'] ?? 0);
 }

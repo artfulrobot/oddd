@@ -16,7 +16,7 @@
     <div class="odd__main-forms">
       <forms :config='config'
         :isMobile="isMobile"
-        :show_regular='config.regular_or_one[1] === "r"'
+        :show_regular='config.regular_or_one[1] === "r" && (!isMobile || body != "")'
         :show_oneoff='config.regular_or_one[0] === "o"'
         />
     </div>

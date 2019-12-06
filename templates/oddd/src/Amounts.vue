@@ -12,7 +12,10 @@
       </div>
     </div>
     <div class="odd__amount-other" :class="{invalid: !!other_amount_error}">
-      <label :for="id + '_other'">Other {{currency_symbol}}</label>
+      <label :for="id + '_other'">
+        <span v-if="presets.length > 0" >Other</span>
+        {{currency_symbol}}
+      </label>
       <div class="odd__amount-other-input">
         <input :id="id + '_other'" v-model="local_amount" @keydown.enter.prevent="selectAmount(local_amount)" />
         <div v-if="!!other_amount_error" class="invalid-msg">{{ other_amount_error }}</div>
