@@ -34,7 +34,24 @@
 
 
       <p style="margin-top: 2rem;"><a href="<?php print htmlspecialchars($return_url) ?>">Return to <?php print str_replace('https://', '', htmlspecialchars($return_url));?></a></p>
-    <?php endif;?>
+      <script>
+        document.addEventListener('DOMContentLoaded', function() {
+          var data = <?php print $json_encoded_analytics_data; ?>;
+          if ((navigator.doNotTrack || false) != 1) {
+            console.log("tracking donation with Google Analytics.", data);
+            gtag('event', 'purchase', {
+              value: data.amount,
+              transaction_id: data.id,
+              currency: data.currency,
+              affiliation: data.affiliation
+            });
+          }
+          else {
+            console.log("openDemocracy respects your browser's Do Not Track setting, so will not track this donation in Google Analytics.");
+          }
+        });
+      </script>
+    <?php endif; /* ----------------end of thank you----------------------*/ ?>
   </div>
   <?php if (!$thanks):?>
   <script><?php print file_get_contents(__DIR__ . '/oddd/dist/static/js/manifest.js');?></script>

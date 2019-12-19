@@ -89,6 +89,22 @@ function oddd_preprocess_node(&$variables) {
 
   if (($_GET['result'] ?? '') === '1') {
     // Just displaying a thank you page.
+    if (isset($_GET['worth_test'])) {
+      $_SESSION['oddc_analytics_data'] = [
+        'amount'          => (float) $_GET['worth_test'],
+        'contribution_id' => 'test_1', // obviously a test, usually numeric
+        'affiliation'     => 'openDemocracy Donation Page',
+        'currency'        => 'GBP',
+      ];
+    }
+    // Create a json-encoded object for anlytics.
+    $variables['json_encoded_analytics_data'] = json_encode([
+      'amount'      => (float) ($_SESSION['oddc_analytics_data']['amount'] ?? 0),
+      'id'          => ($_SESSION['oddc_analytics_data']['contribution_id'] ?? 'missing'),
+      'currency'    => ($_SESSION['oddc_analytics_data']['currency'] ?? 'GBP'),
+      'affiliation' => ($_SESSION['oddc_analytics_data']['affiliation'] ?? 'openDemocracy Donation Page'),
+    ]);
+
     $variables['thanks'] = 1;
     $variables['thanks_text'] = $variables['content']['field_thanks_web_text'][0]['#markup'] ?? '<p>Thank you.</p>';
 
