@@ -71,8 +71,14 @@
     <div class="odd-signup-page-inner">
       <h2>Can you donate?</h2>
       <div class="question-container">
-        <button @click.prevent="showDonate()">Yes</button>
-        <button @click.prevent="skipDonate()">No</button>
+        <div class="odd__buttons">
+          <div class="odd__button-wrapper">
+            <button @click.prevent="showDonate()">Yes</button>
+          </div>
+          <div class="odd__button-wrapper">
+            <button @click.prevent="skipDonate()">No</button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
