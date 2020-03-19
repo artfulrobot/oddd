@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div class="odd__input-pair">
+    <div class="odd__input-pair" v-if="! (fixed && fixed.first_name)">
       <div class="odd__textfield" :class="{invalid: !!errors.first_name}">
         <label :for="id + '_first_name'">First Name</label>
         <input :id="id + '_first_name'"
@@ -20,7 +20,7 @@
         <div v-if="errors.last_name" class="invalid-msg">{{errors.last_name}}</div>
       </div>
     </div>
-    <div class="odd__textfield" :class="{invalid: !!errors.email}">
+    <div class="odd__textfield" :class="{invalid: !!errors.email}" v-if="!(fixed && fixed.email)">
       <label :for="id + '_email'">Email</label>
       <input :id="id + '_email'"
          v-model='workingData.email'
@@ -78,6 +78,7 @@ export default {
     };
   },
   props: [
+    'fixed',
     'first_name',
     'last_name',
     'email',
@@ -108,6 +109,9 @@ export default {
       country: this.country,
       entered: {},
     };
+    if (this.fixed) {
+      Object.assign(this.workingData, this.fixed);
+    }
   },
   watch: {
     workingData: {

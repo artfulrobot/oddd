@@ -7,9 +7,9 @@
     <br/>
     <div class="odd__next-button-wrapper" >
       <button
-        :disabled="errorCount > 0"
+        :disabled="errorCount > 0 && !busy"
          class="odd__next-button"
-         @click.prevent="processSignup()">Sign Up</button>
+         @click.prevent="processSignup()">Sign Up</button> <i class="od-spinner" v-show="busy"></i>
     </div>
   </div>
 </template>
@@ -26,6 +26,7 @@ export default {
       'last_name': 'Lott',
       'email': 'forums@artfulrobot.uk',
       'entered': {},
+      'busy': false,
     };
   },
   computed: {
@@ -70,6 +71,7 @@ export default {
       if (this.errorCount > 0) {
         return;
       }
+      this.busy = true;
 
       const data={
         service: 'signup',
@@ -87,6 +89,7 @@ export default {
           return Axios.post('/oddd/api', data);
         }
         else {
+          this.busy = false;
           console.warn("ah shit 4");
           throw "Failed to obtain signature.";
         }
@@ -94,15 +97,23 @@ export default {
       .then(response => {
         console.log("got response 2", response.data);
         if (! response.data.error) {
-          this.$emit('completed');
+          this.$emit('completed', {
+            first_name: this.first_name,
+            last_name: this.last_name,
+            email: this.email,
+            consent: 1, // by its nature.
+          });
+          this.busy = false;
         }
         else {
+          this.busy = false;
           console.warn("ah shit 2");
           throw "Failed submitting final request.";
         }
       })
       .catch( error => {
 
+        this.busy = false;
         var user_message = 'Sorry there was a problem, please try again and let us know if this persists.';
         if (typeof error === 'object') {
           if (error.response) {

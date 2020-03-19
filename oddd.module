@@ -181,6 +181,9 @@ function oddd_preprocess_node(&$variables) {
 			"regular_push"    =>   ($variables['field_regular_push'][0]['value'] ?? '')
 														? $variables['field_regular_push'][0]['value']
 														: variable_get('oddd_default_regular_push', ''),
+      "ux"              => ($variables['field_ux'][0]['value'] ?? 'donation-1'),
+      'tweet'           => ($variables['node']->field_twitter_tweet_text['und'][0]['value'] ?? ''),
+      'facebook'        => (int) ($variables['node']->field_facebook['und'][0]['value'] ?? 0),
     ];
 
     if ($variables['node']->field_campaign['und'][0]['value'] ?? '') {
@@ -211,6 +214,9 @@ function oddd_preprocess_node(&$variables) {
       civicrm_initialize();
       $odd_app_config['countries'] = oddc__get_country_list();
     }
+
+    // Add twitter, facebook
+
 
     $variables['odd_config'] = htmlspecialchars(json_encode($odd_app_config));
 
@@ -311,48 +317,59 @@ function oddd_theme($existing, $type, $theme, $path) {
 
 
 /**
- * Page callback for json API endpoint used by the public VueJS app
+ * Page callback for json API endpoint used by the public VueJS app for donation pages.
  *
  */
 function oddd__page_api() {
 
-  $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
-  if ($method === 'GET') {
-    $input = $_GET;
-  }
-  else {
-    $input = json_decode(file_get_contents('php://input') ?? NULL, TRUE);
-  }
-  if (!is_array($input)) {
-    header("$_SERVER[SERVER_PROTOCOL] 400 Invalid request");
-    $body = '{"error": "Invalid request err2"}';
-  }
+  try {
+    $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
+    if ($method === 'POST') {
+      $input = json_decode(file_get_contents('php://input') ?? NULL, TRUE);
+      if (!is_array($input)) {
+        throw new InvalidArgumentException("Invalid request err2");
+      }
+    }
 
-  // Each request identifies itself with a nid, so we can look up various details directly from the node.
-  $nid = (int) ($input['nid'] ?? 0);
-  if (!$nid) {
-    header("$_SERVER[SERVER_PROTOCOL] 400 Invalid request");
-    $body = '{"error": "Invalid request err1"}';
-  }
-  $node = node_load($nid);
-  if (!$node) {
-    header("$_SERVER[SERVER_PROTOCOL] 400 Invalid request");
-    $body = '{"error": "Invalid request err3"}';
-  }
+    // We need to know which service this request is for.
+    if (!preg_match('/^(donation|signup)$/', $input['service'] ?? '')) {
+      throw new InvalidArgumentException("Invalid request err4");
+    }
 
-  oddd__add_page_details($input, $node);
+    // Each request identifies itself with a nid, so we can look up various details directly from the node.
+    $nid = (int) ($input['nid'] ?? 0);
+    if (!$nid) {
+      throw new InvalidArgumentException("Invalid request err1");
+    }
+    $node = node_load($nid);
+    if (!$node) {
+      throw new InvalidArgumentException("Invalid request err3");
+    }
+    else {
+      oddd__add_page_details($input, $node);
+      // If we have source on GET, (and not in input), then add it to input.
+      if (empty($input['source']) && !empty($_GET['input'])) {
+        $input['source'] = $_GET['source'];
+      }
 
-  // This could be done over an API request if needed in future.
-  civicrm_initialize();
-  $response = oddc__get_redirect_url($input);
-  // testing: $response = ['error' => 'Foo error'];
+      civicrm_initialize();
+      // This could be done over a CiviCRM API request if needed in future - if we could fix a way to not rely on thenode lookups.
+      $method = 'processRequest' . ucfirst($input['service']);
+      $response = CRM_Oddc::factory()->$method($input);
 
-  if (empty($response['error'])) {
-    $body = json_encode(['url' => $response['url']]);
+      if (empty($response['error'])) {
+        // If successful, output response we got as JSON.
+        $body = json_encode($response);
+      }
+      else {
+        header("$_SERVER[SERVER_PROTOCOL] 400 Invalid request");
+        $body = json_encode(['error' => $response['error'], 'user_error' => $response['user_error'] ?? FALSE]);
+      }
+    }
   }
-  else {
+  catch (InvalidArgumentException $e) {
     header("$_SERVER[SERVER_PROTOCOL] 400 Invalid request");
-    $body = json_encode(['error' => $response['error'], 'user_error' => $response['user_error'] ?? FALSE]);
+    $body = json_encode(['error' => $e->getMessage()]);
   }
 
   header("Content-Type: application/json");
@@ -481,4 +498,5 @@ function oddd__add_page_details(&$input, $node) {
   $input['thanks_message_template_id'] = (int) ($node->field_thank_you_tpl['und'][0]['value'] ?? 0);
   $input['tweet']           = $node->field_twitter_tweet_text['und'][0]['value'] ?? '';
   $input['facebook']        = (int) ($node->field_facebook['und'][0]['value'] ?? 0);
+  // @todo add the current (public) title of the page?
 }

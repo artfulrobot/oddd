@@ -72,7 +72,7 @@
     </div>
     <name-address
       @updated="updateNameAddress"
-      v-bind="{geo, first_name, last_name, email, street_address, city, postal_code, country, countries, include_address, errors}"
+      v-bind="{fixed, geo, first_name, last_name, email, street_address, city, postal_code, country, countries, include_address, errors}"
       />
     <div v-if="geo === 'GB' && legal_entity === 'charity' && include_address" class="odd__giftaid">
       <h3>Gift Aid</h3>
@@ -85,9 +85,9 @@
         the amount of Gift Aid claimed on all my pledges it is my
         responsibility to pay the difference. </p>
     </div>
-    <span style="display:none;">Mailinglist {{mailing_list}}</span>
+
     <div :class="{invalid: !!errors.consent}" style="margin-top:2rem;"
-      v-if="mailing_list > 0"
+      v-if="mailing_list > 0 && !(fixed)"
       >
       <p>Shall we add you to our email newsletter list? You can unsubscribe at any time.</p>
       <div class="odd__checkbox">
@@ -163,9 +163,10 @@ export default {
       mouse_over_oneoff: false,
     };
   },
-  props: [ 'config', 'show_regular', 'show_oneoff', 'isMobile' ],
+  props: [ 'config', 'show_regular', 'show_oneoff', 'isMobile', 'fixed' ],
   created() {
     const vm = this;
+    // Copy config values to our normal data object.
     foreach([
       'title', 'nid', 'geo', 'body', 'standfirst', 'extra', 'source', 'regular_or_one', 'presets', 'legal_entity',
       'geoip', 'first_name', 'last_name', 'email', 'street_address', 'city', 'postal_code',
@@ -268,6 +269,7 @@ export default {
       this.setStep('step2');
     },
     updateNameAddress(e) {
+      // Copy the details from the NameAddress component.
       const vm=this;
       foreach(['first_name', 'last_name', 'email', 'street_address', 'city', 'postal_code', 'country'],
         fld => { vm[fld] = (e[fld] ? e[fld].replace(/^\s*(.*?)\s*$/, '$1') : ''); } );
@@ -292,11 +294,15 @@ export default {
         fields.forEach(pair => { if (!this[pair[0]]) errors[pair[0]] = pair[1]; });
       };
 
-      requiredInputs([
-        ['first_name' , 'Required'],
-        ['last_name' , 'Required'],
-        ['email' , 'Required'],
-      ]);
+      // Only require name and email if they are not fixed.
+      if (!(this.fixed && this.fixed.first_name && this.fixed.last_name && this.fixed.email)) {
+        requiredInputs([
+          ['first_name' , 'Required'],
+          ['last_name' , 'Required'],
+          ['email' , 'Required'],
+        ]);
+      }
+
       if (this.include_address) {
         requiredInputs([
           ['street_address' , 'Required'],
@@ -304,7 +310,8 @@ export default {
           ['postal_code' , 'Required'],
         ]);
       }
-      if (this.mailing_list > 0) {
+
+      if (this.mailing_list > 0 && !(this.fixed && this.fixed.consent)) {
         requiredInputs([ ['consent' , 'Please confirm your preference'] ]);
       }
 
@@ -313,26 +320,36 @@ export default {
       }
       this.errors = errors;
       if (Object.keys(errors).length > 0) {
+        console.log("ERRORS", errors);
         return;
       }
 
       this.setStep('step3');
       // OK.
-      const data={};
-      data.email = this.email;
+      const data = { service: 'donation'};
+
+      if (this.fixed) {
+        ['first_name', 'last_name', 'email', 'consent'].forEach(prop => {
+          data[prop] = this.fixed[prop] || this[prop];
+        })
+      }
+      else {
+        data.first_name = this.first_name;
+        data.last_name = this.last_name;
+        data.email = this.email;
+        data.consent = this.consent ? 1 : 0;
+      }
+
       data.amount = this['amount_' + this.recur];
       data.nid = this.nid;
       data.geo = this.geo;
       data.source = this.source;
-      data.first_name = this.first_name;
-      data.last_name = this.last_name;
       data.street_address = this.street_address;
       data.city = this.city;
       data.postal_code = this.postal_code;
       data.country = this.country;
       data.currency = this.currency;
       data.giftaid = this.giftaid ? 1 : 0;
-      data.consent = this.consent ? 1 : 0;
       data.is_recur = (this.recur === 'regular') ? 1 : 0;
       data.test_mode = this.test_mode;
       //console.log("sending", data);

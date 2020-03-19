@@ -54,11 +54,9 @@
     <?php endif; /* ----------------end of thank you----------------------*/ ?>
   </div>
   <?php if (!$thanks):?>
-  <script><?php print file_get_contents(__DIR__ . '/oddd/dist/static/js/manifest.js');?></script>
-  <script><?php print file_get_contents(__DIR__ . '/oddd/dist/static/js/vendor.js');?></script>
-  <script><?php print file_get_contents(__DIR__ . '/oddd/dist/static/js/app.js');?></script>
+  <script><?php print file_get_contents(__DIR__ . '/oddd/dist/oddd.js');?></script>
   <?php endif;?>
-  <style><?php print file_get_contents(__DIR__ . '/oddd/dist/static/css/app.css');?></style>
+  <style><?php print file_get_contents(__DIR__ . '/oddd/dist/oddd.css');?></style>
 </div>
 <svg width="0" height="0" display="none">
     <defs>

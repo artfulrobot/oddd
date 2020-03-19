@@ -6,7 +6,7 @@
     <div class="odd__mobile-top-forms">
 
       <forms
-        v-if="ux === 'donation-1' && isMobile && config.regular_or_one[1] === 'r'"
+        v-if="isMobile && config.regular_or_one[1] === 'r'"
         :config='config'
         :isMobile="isMobile"
         :show_regular='true'
@@ -16,16 +16,11 @@
     <div class="odd__body-text" v-html="body" />
     <div class="odd__main-forms">
       <forms
-        v-if="ux === 'donation-1'"
         :config='config'
         :isMobile="isMobile"
         :show_regular='config.regular_or_one[1] === "r" && (!isMobile || body != "")'
         :show_oneoff='config.regular_or_one[0] === "o"'
         />
-      <signup v-if="ux === 'signup-share-donate-1'"
-        :config="config"
-        @completed=""
-      ></signup>
     </div>
   </div>
   <div class="odd__extra-wrapper">
@@ -48,7 +43,6 @@ export default {
       body: null,
       extra : null,
       isMobile: false,
-      ux: this.config.ux || 'donation-1',
     };
   },
   created() {
@@ -71,8 +65,8 @@ export default {
   },
   methods: {
     detectMobile() {
-      this.isMobile = window.matchMedia('screen and (max-width: 767px)').matches;
-    }
+      this.isMobile = this.$root.isMobile();
+    },
   },
 };
 </script>

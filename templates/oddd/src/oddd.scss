@@ -285,6 +285,7 @@ mark.odd__test-mode {
 }
 .odd__next-button {
   @include buttons-secondary;
+  display: inline-block;
 }
 .odd__checkbox {
   display:flex;
@@ -349,4 +350,18 @@ mark.odd__test-mode {
   align-items: center;
   &>a { flex:0 0 auto; color:#555; font-size:0.8rem; text-transform:uppercase; cursor: pointer; }
   &>div { flex:1 1 auto; padding-right:1rem; text-align:left; }
+}
+@keyframes od-spinner {
+  0% { transform: none; }
+  100% { transform: rotateZ(360deg); }
+}
+.od-spinner {
+  display:inline-block;
+  animation: od-spinner 0.4s infinite linear;
+  fill: red;
+  width: 1rem;
+  height: 1rem;
+  background: url(data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZlcnNpb249IjEuMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMTYiIGN5PSIxNiIgcj0iMTYiIGZpbGw9IiMwMDYxYmYiLz4KPGNpcmNsZSBjeD0iMjYiIGN5PSIxNiIgcj0iNCIgZmlsbD0iI2ZmZiIgLz4KPC9zdmc+Cgo=);
+  background-size: 100%;
+  margin: 0 1rem;
 }

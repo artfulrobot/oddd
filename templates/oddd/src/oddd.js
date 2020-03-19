@@ -26,7 +26,15 @@ document.addEventListener('DOMContentLoaded', () => {
     }[c.ux || 'donation-1'] || null;
 
     /* eslint no-unused-vars: 0 */
-    const app = new Vue({ 'el': el, render: h => h(ux, {props: {config: c}}) });
+    const app = new Vue({
+      'el': el,
+      render: h => h(ux, {props: {config: c}}),
+      methods: {
+        isMobile() {
+          return window.matchMedia('screen and (max-width: 767px)').matches;
+        },
+      }
+    });
     if (c.mode === 'test') {
       document.body.classList.add('od-test-mode');
     }
