@@ -2902,6 +2902,24 @@ __webpack_require__.r(__webpack_exports__);
 //
 //
 //
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
 
 
 
@@ -3001,11 +3019,13 @@ var debounce = __webpack_require__(/*! lodash/debounce */ "./node_modules/lodash
     },
     shareOnFacebook: function shareOnFacebook() {
       window.open('https://www.facebook.com/sharer.php?u=' + encodeURIComponent(window.location.href), 'sharer', 'toolbar=0,status=0,width=548,height=325');
-      this.page = 3;
-      this.niceScrollTo(this.$refs.donateQuestion);
+      this.showDonateQuestionAfterShare();
     },
     shareOnTwitter: function shareOnTwitter() {
       window.open('https://twitter.com/intent/tweet?text=' + encodeURIComponent(this.config.tweet) + '&url=' + encodeURIComponent(window.location.href));
+      this.showDonateQuestionAfterShare();
+    },
+    showDonateQuestionAfterShare: function showDonateQuestionAfterShare() {
       this.page = 3;
       this.niceScrollTo(this.$refs.donateQuestion);
     }
@@ -7159,23 +7179,9 @@ var render = function() {
               }
             }),
             _vm._v(" "),
-            _c(
-              "a",
-              {
-                on: {
-                  click: function($event) {
-                    $event.preventDefault()
-                    return _vm.signupCompleted({
-                      first_name: "Rich",
-                      last_name: "Lott",
-                      email: "forums@artfulrobot.uk",
-                      consent: 1
-                    })
-                  }
-                }
-              },
-              [_vm._v("test")]
-            ),
+            0
+              ? undefined
+              : _vm._e(),
             _vm._v(" "),
             _c(
               "p",
@@ -7244,36 +7250,44 @@ var render = function() {
         staticClass: "odd-page"
       },
       [
-        _c("h2", [_vm._v("Thanks, you're all signed up.")]),
-        _vm._v(" "),
-        _c("p", [_vm._v("Can you share this with your friends?")]),
-        _vm._v(" "),
-        _c("div", { staticClass: "question-container" }, [
-          _c(
-            "button",
-            {
-              on: {
-                click: function($event) {
-                  $event.preventDefault()
-                  return _vm.showShare()
-                }
-              }
-            },
-            [_vm._v("Yes")]
-          ),
+        _c("div", { staticClass: "odd-signup-page-inner" }, [
+          _c("h2", [_vm._v("Thanks, you're all signed up.")]),
           _vm._v(" "),
-          _c(
-            "button",
-            {
-              on: {
-                click: function($event) {
-                  $event.preventDefault()
-                  return _vm.skipShare()
-                }
-              }
-            },
-            [_vm._v("No")]
-          )
+          _c("p", [_vm._v("Can you share this with your friends?")]),
+          _vm._v(" "),
+          _c("div", { staticClass: "question-container" }, [
+            _c("div", { staticClass: "odd__buttons" }, [
+              _c("div", { staticClass: "odd__button-wrapper" }, [
+                _c(
+                  "button",
+                  {
+                    on: {
+                      click: function($event) {
+                        $event.preventDefault()
+                        return _vm.showShare()
+                      }
+                    }
+                  },
+                  [_vm._v("Yes")]
+                )
+              ]),
+              _vm._v(" "),
+              _c("div", { staticClass: "odd__button-wrapper" }, [
+                _c(
+                  "button",
+                  {
+                    on: {
+                      click: function($event) {
+                        $event.preventDefault()
+                        return _vm.skipShare()
+                      }
+                    }
+                  },
+                  [_vm._v("No")]
+                )
+              ])
+            ])
+          ])
         ])
       ]
     ),
@@ -7293,86 +7307,102 @@ var render = function() {
         staticClass: "odd-page"
       },
       [
-        _c("h2", [_vm._v("Please share with your friends")]),
-        _vm._v(" "),
-        _c("div", { staticClass: "odd-social-wrapper" }, [
-          _vm.config.facebook
-            ? _c("div", { staticClass: "odd-social-company" }, [
-                _c(
-                  "a",
-                  {
-                    attrs: { href: "" },
-                    on: {
-                      click: function($event) {
-                        $event.preventDefault()
-                        return _vm.shareOnFacebook()
-                      }
-                    }
-                  },
-                  [
-                    _c(
-                      "svg",
-                      {
-                        staticClass: "icon icon-facebook",
-                        attrs: {
-                          role: "img",
-                          viewBox: "16 15 19 19",
-                          width: "20px",
-                          height: "20px"
-                        }
-                      },
-                      [
-                        _c("title", [_vm._v("Share on Facebook")]),
-                        _vm._v(" "),
-                        _c("use", {
-                          staticClass: "icon-style",
-                          attrs: { "xlink:href": "#icon-facebook" }
-                        })
-                      ]
-                    )
-                  ]
-                )
-              ])
-            : _vm._e(),
+        _c("div", { staticClass: "odd-signup-page-inner" }, [
+          _c("h2", [_vm._v("Please share with your friends")]),
           _vm._v(" "),
-          _vm.config.tweet
-            ? _c("div", { staticClass: "odd-social-company" }, [
-                _c(
-                  "a",
-                  {
-                    attrs: { href: "" },
-                    on: {
-                      click: function($event) {
-                        $event.preventDefault()
-                        return _vm.shareOnTwitter()
-                      }
-                    }
-                  },
-                  [
-                    _c(
-                      "svg",
-                      {
-                        staticClass: "icon icon-twitter",
-                        attrs: {
-                          role: "img",
-                          viewBox: "16 15 19 19",
-                          width: "20px",
-                          height: "20px"
+          _c("div", { staticClass: "odd-social-wrapper" }, [
+            _vm.config.facebook
+              ? _c("div", { staticClass: "odd-social-company" }, [
+                  _c(
+                    "a",
+                    {
+                      attrs: { href: "" },
+                      on: {
+                        click: function($event) {
+                          $event.preventDefault()
+                          return _vm.shareOnFacebook()
                         }
-                      },
-                      [
-                        _c("title", [_vm._v("Share on Twitter")]),
-                        _vm._v(" "),
-                        _c("use", {
-                          staticClass: "icon-style",
-                          attrs: { "xlink:href": "#icon-twitter" }
-                        })
-                      ]
-                    )
-                  ]
-                )
-              ])
-            : _vm._e()
+                      }
+                    },
+                    [
+                      _c(
+                        "svg",
+                        {
+                          staticClass: "icon icon-facebook",
+                          attrs: {
+                            role: "img",
+                            viewBox: "16 15 19 19",
+                            width: "20px",
+                            height: "20px"
+                          }
+                        },
+                        [
+                          _c("title", [_vm._v("Share on Facebook")]),
+                          _vm._v(" "),
+                          _c("use", {
+                            staticClass: "icon-style",
+                            attrs: { "xlink:href": "#icon-facebook" }
+                          })
+                        ]
+                      )
+                    ]
+                  )
+                ])
+              : _vm._e(),
+            _vm._v(" "),
+            _vm.config.tweet
+              ? _c("div", { staticClass: "odd-social-company" }, [
+                  _c(
+                    "a",
+                    {
+                      attrs: { href: "" },
+                      on: {
+                        click: function($event) {
+                          $event.preventDefault()
+                          return _vm.shareOnTwitter()
+                        }
+                      }
+                    },
+                    [
+                      _c(
+                        "svg",
+                        {
+                          staticClass: "icon icon-twitter",
+                          attrs: {
+                            role: "img",
+                            viewBox: "16 15 19 19",
+                            width: "20px",
+                            height: "20px"
+                          }
+                        },
+                        [
+                          _c("title", [_vm._v("Share on Twitter")]),
+                          _vm._v(" "),
+                          _c("use", {
+                            staticClass: "icon-style",
+                            attrs: { "xlink:href": "#icon-twitter" }
+                          })
+                        ]
+                      )
+                    ]
+                  )
+                ])
+              : _vm._e(),
+            _vm._v(" "),
+            _c(
+              "a",
+              {
+                attrs: { href: "" },
+                on: {
+                  click: function($event) {
+                    $event.preventDefault()
+                    return _vm.showDonateQuestionAfterShare()
+                  }
+                }
+              },
+              [_vm._v("Skip sharing")]
+            )
+          ])
         ])
       ]
     ),
@@ -7392,34 +7422,36 @@ var render = function() {
         staticClass: "odd-page"
       },
       [
-        _c("h2", [_vm._v("Can you donate?")]),
-        _vm._v(" "),
-        _c("div", { staticClass: "question-container" }, [
-          _c(
-            "button",
-            {
-              on: {
-                click: function($event) {
-                  $event.preventDefault()
-                  return _vm.showDonate()
-                }
-              }
-            },
-            [_vm._v("Yes")]
-          ),
+        _c("div", { staticClass: "odd-signup-page-inner" }, [
+          _c("h2", [_vm._v("Can you donate?")]),
           _vm._v(" "),
-          _c(
-            "button",
-            {
-              on: {
-                click: function($event) {
-                  $event.preventDefault()
-                  return _vm.skipDonate()
+          _c("div", { staticClass: "question-container" }, [
+            _c(
+              "button",
+              {
+                on: {
+                  click: function($event) {
+                    $event.preventDefault()
+                    return _vm.showDonate()
+                  }
                 }
-              }
-            },
-            [_vm._v("No")]
-          )
+              },
+              [_vm._v("Yes")]
+            ),
+            _vm._v(" "),
+            _c(
+              "button",
+              {
+                on: {
+                  click: function($event) {
+                    $event.preventDefault()
+                    return _vm.skipDonate()
+                  }
+                }
+              },
+              [_vm._v("No")]
+            )
+          ])
         ])
       ]
     ),
@@ -7439,19 +7471,25 @@ var render = function() {
         staticClass: "odd-page"
       },
       [
-        _c("h2", [_vm._v("donate now")]),
-        _vm._v(" "),
-        _c("forms", {
-          attrs: {
-            config: _vm.config,
-            isMobile: _vm.isMobile,
-            show_regular: _vm.config.regular_or_one[1] === "r",
-            show_oneoff: _vm.config.regular_or_one[0] === "o",
-            fixed: _vm.page1data
-          }
-        })
-      ],
-      1
+        _c(
+          "div",
+          { staticClass: "odd-signup-page-inner" },
+          [
+            _c("h2", [_vm._v("donate now")]),
+            _vm._v(" "),
+            _c("forms", {
+              attrs: {
+                config: _vm.config,
+                isMobile: _vm.isMobile,
+                show_regular: _vm.config.regular_or_one[1] === "r",
+                show_oneoff: _vm.config.regular_or_one[0] === "o",
+                fixed: _vm.page1data
+              }
+            })
+          ],
+          1
+        )
+      ]
     ),
     _vm._v(" "),
     _c(
@@ -7468,11 +7506,20 @@ var render = function() {
         ref: "end",
         staticClass: "odd-page"
       },
-      [_c("h2", [_vm._v("Thanks!")])]
+      [_vm._m(0)]
     )
   ])
 }
-var staticRenderFns = []
+var staticRenderFns = [
+  function() {
+    var _vm = this
+    var _h = _vm.$createElement
+    var _c = _vm._self._c || _h
+    return _c("div", { staticClass: "odd-signup-page-inner" }, [
+      _c("h2", [_vm._v("Thanks!")])
+    ])
+  }
+]
 render._withStripped = true
 
 
