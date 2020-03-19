@@ -4,8 +4,9 @@
     <mark v-if="config.mode == 'test'" class="odd__test-mode">Test mode active!</mark>
     <div class="odd__standfirst" v-html="processedStandfirst" />
     <div class="odd__mobile-top-forms">
+
       <forms
-        v-if="isMobile && config.regular_or_one[1] === 'r'"
+        v-if="ux === 'donation-1' && isMobile && config.regular_or_one[1] === 'r'"
         :config='config'
         :isMobile="isMobile"
         :show_regular='true'
@@ -14,11 +15,17 @@
     </div>
     <div class="odd__body-text" v-html="body" />
     <div class="odd__main-forms">
-      <forms :config='config'
+      <forms
+        v-if="ux === 'donation-1'"
+        :config='config'
         :isMobile="isMobile"
         :show_regular='config.regular_or_one[1] === "r" && (!isMobile || body != "")'
         :show_oneoff='config.regular_or_one[0] === "o"'
         />
+      <signup v-if="ux === 'signup-share-donate-1'"
+        :config="config"
+        @completed=""
+      ></signup>
     </div>
   </div>
   <div class="odd__extra-wrapper">
@@ -29,10 +36,11 @@
 </template>
 <script>
 import Forms from './Forms.vue';
-var foreach = require('lodash/forEach');
+import Signup from './Signup.vue';
 var debounce = require('lodash/debounce');
 export default {
-  components: {Forms},
+  components: {Forms, Signup},
+  props: [ 'config' ],
   data() {
     return {
       showExtra: false,
@@ -40,14 +48,13 @@ export default {
       body: null,
       extra : null,
       isMobile: false,
+      ux: this.config.ux || 'donation-1',
     };
   },
-  props: [ 'config' ],
   created() {
     const vm = this;
-    foreach([
-      'body', 'standfirst', 'extra'
-    ], field => { vm[field] = vm.config[field]; } );
+    ['body', 'standfirst', 'extra']
+      .forEach(field => { vm[field] = vm.config[field]; });
 
     // We need to detect mobile.
     window.addEventListener('resize', debounce(e => { vm.detectMobile(); }, 100));
@@ -55,6 +62,8 @@ export default {
   },
   computed: {
     processedStandfirst() {
+      // This takes the current giving statement string, converts it to HTML,
+      // and swaps out '{contact.currentRegularGiving}' in the standfirst for this HTML.
       var dummy = document.createElement('div');
       dummy.textContent = this.config.giving;
       return this.standfirst.replace('{contact.currentRegularGiving}', dummy.innerHTML );

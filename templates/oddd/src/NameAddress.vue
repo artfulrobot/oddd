@@ -6,6 +6,7 @@
         <input :id="id + '_first_name'"
            v-model='workingData.first_name'
            name="first_name"
+           @focus="requiredInput('first_name')"
            autocomplete="given-name" />
         <div v-if="errors.first_name" class="invalid-msg">{{errors.first_name}}</div>
       </div>
@@ -14,6 +15,7 @@
         <input :id="id + '_last_name'"
            v-model='workingData.last_name'
            name="last_name"
+           @focus="requiredInput('last_name')"
            autocomplete="family-name"/>
         <div v-if="errors.last_name" class="invalid-msg">{{errors.last_name}}</div>
       </div>
@@ -23,6 +25,7 @@
       <input :id="id + '_email'"
          v-model='workingData.email'
          name="email"
+         @focus="requiredInput('email')"
          autocomplete="email"/>
       <div v-if="errors.email" class="invalid-msg">{{errors.email}}</div>
     </div>
@@ -87,16 +90,23 @@ export default {
     'include_address',
     'errors'
   ],
+  methods: {
+    requiredInput(fld) {
+      this.workingData.entered[fld] = true;
+      this.$emit('updated', this.workingData);
+    },
+  },
   mounted () {
     this.id = this._uid;
     this.workingData = {
-      'first_name': this.first_name,
-      'last_name': this.last_name,
-      'street_address': this.street_address,
-      'email': this.email,
-      'city': this.city,
-      'postal_code': this.postal_code,
-      'country': this.country,
+      first_name: this.first_name,
+      last_name: this.last_name,
+      street_address: this.street_address,
+      email: this.email,
+      city: this.city,
+      postal_code: this.postal_code,
+      country: this.country,
+      entered: {},
     };
   },
   watch: {
