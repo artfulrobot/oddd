@@ -104,6 +104,14 @@ function oddd_preprocess_node(&$variables) {
       'currency'    => ($_SESSION['oddc_analytics_data']['currency'] ?? 'GBP'),
       'affiliation' => ($_SESSION['oddc_analytics_data']['affiliation'] ?? 'openDemocracy Donation Page'),
     ]);
+    watchdog('oddd',
+      'Thank you analytics: session: %analytics, json: %json',
+      [ '%analytics' => json_encode($_SESSION['oddc_analytics_data'], JSON_PRETTY_PRINT),
+      '%json' => $variables['json_encoded_analytics_data']],
+      WATCHDOG_NOTICE);
+
+    // Remove from session, in case user presses back/revisits page.
+    $_SESSION['oddc_analytics_data'] = [];
 
     $variables['thanks'] = 1;
     $variables['thanks_text'] = $variables['content']['field_thanks_web_text'][0]['#markup'] ?? '<p>Thank you.</p>';
