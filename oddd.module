@@ -24,7 +24,7 @@ function oddd_menu()
       'page arguments'   => ['oddd__form_config'],
       'access arguments' => ['edit any donation_page content'],
     ],
-    // JSON API
+    // JSON API - used by the oddd forms, not the petition, nor the wagtail petition!
     'oddd/api' => [
       'page callback'   => 'oddd__page_api',
       'access callback' => TRUE,
@@ -40,6 +40,10 @@ function oddd_menu()
       'page arguments'  => [2],
       'access callback' => TRUE,
     ],
+    'richtest' => [
+      'page callback' => 'oddd__page_rich',
+      'access callback' => TRUE,
+    ]
   ];
 }
 /**
@@ -52,6 +56,21 @@ function oddd_preprocess_node(&$variables) {
     return;
   }
   drupal_page_is_cacheable(FALSE);
+  // If we were sent data on the query string that we don't want the browser to store in its history,
+  // e.g. names, emails, move that onto the session now and redirect, preserving other fields.
+
+  if ($_GET) {
+    // Copy GET data to our original query, preferring incoming GET data
+    $_SESSION["node/" . $variables['node']->nid]['original_query'] = array_merge($_SESSION["node/" . $variables['node']->nid]['original_query'], $_GET);
+    if (array_intersect(['fname', 'lname', 'email', 'postcode'], array_keys($_GET))) {
+      // Redirect back to self without these params.
+      $newQuery = $_GET;
+      unset($newQuery['fname'], $newQuery['lname'], $newQuery['email'], $newQuery['postcode']);
+      drupal_goto(request_path(), ['query' => $newQuery]);
+      // Script exits here.
+    }
+  }
+
   civicrm_initialize();
 
   if (!empty($_GET['gcrf'])) {
@@ -120,6 +139,9 @@ function oddd_preprocess_node(&$variables) {
     $variables['return_url'] = $_SESSION['od_referrer_return'] ?? 'https://opendemocracy.net';
     unset($_SESSION['od_referrer_return']);
     $variables['odd_config'] = htmlspecialchars(json_encode([]));
+
+    // Don't need this any more.
+    unset($_SESSION["node/" . $variables['node']->nid]);
   }
   else {
     // Displaying the form.
@@ -162,6 +184,8 @@ function oddd_preprocess_node(&$variables) {
     }
      */
 
+    $originalQuery = $_SESSION["node/" . $variables['node']->nid]['original_query'] ?? [];
+
     $odd_app_config = [
       'title'           => $variables['title'],
       'nid'             => $variables['nid'],
@@ -175,15 +199,16 @@ function oddd_preprocess_node(&$variables) {
       'source'          => $_GET['source'] ?? ($_GET['src'] ?? ''),
       'prefill_amount'  => $_GET['amount'] ?? '',
       'geo'             => $country,
-      "email"           => '',
+      "email"           => $originalQuery['email'] ?? '',
       'mode'            => ($variables['field_test_mode'][0]['value'] ?? 0) ? 'test' : 'live',
-      "first_name"      => '',
+      "first_name"      => $originalQuery['fname'] ?? '',
+      "last_name"       => $originalQuery['lname'] ?? '',
       "street_address"  => '',
       "city"            => '',
-      "postal_code"     => '',
+      "postal_code"     => $originalQuery['postcode'] ?? '',
       'campaign_target' => 0,
       'campaign_total'  => 0,
-      "country"         => $country, // default to geoip detected country
+      "country"         => $country, // default to geoip detected country @todo complex thing if sent from form
       "include_address" => (int) ($variables['field_include_address'][0]['value']),
       "mailing_list"    => (int) ($variables['field_mailing_list'][0]['value'] ?? 0),
 			"regular_push"    =>   ($variables['field_regular_push'][0]['value'] ?? '')
@@ -193,6 +218,12 @@ function oddd_preprocess_node(&$variables) {
       'tweet'           => ($variables['node']->field_twitter_tweet_text['und'][0]['value'] ?? ''),
       'facebook'        => (int) ($variables['node']->field_facebook['und'][0]['value'] ?? 0),
     ];
+
+    // Allow utm_ params to override source obtained from source/src.
+    $utms = '|' . implode('', array_map(function($_) { return ($_GET[$_] ?? '') . '|'; }, ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content']));
+    if ($utms !== '||||||') {
+      $odd_app_config['source'] = $utms;
+    }
 
     if ($variables['node']->field_campaign['und'][0]['value'] ?? '') {
       // We have to add campaign data.
@@ -309,7 +340,6 @@ function oddd_form_donation_page_node_form_alter(&$form, &$form_state, $hook) {
   // Vuejs app to do json.
   drupal_add_js('https://cdn.jsdelivr.net/npm/vue@2.5.21/dist/vue.js');
   drupal_add_js(drupal_get_path('module', 'oddd') . '/admin.js');
-
 }
 /**
  * Implements hook_theme().
@@ -324,6 +354,34 @@ function oddd_theme($existing, $type, $theme, $path) {
 }
 
 
+// Hooks from hook_post_action
+/**
+ *
+ * @param Object $node
+ * @param string
+ */
+function oddd_node_postsave($node, $hook_type) {
+  $json = [
+    // @todo load normal thanks text
+    'shareAsk'     => check_markup($node->field_thanks_can_you_share['und'][0]['value'], $node->field_thanks_can_you_share['und'][0]['format']),
+    'donateAsk'    => check_markup($node->field_thanks_can_you_donate['und'][0]['value'], $node->field_thanks_can_you_donate['und'][0]['format']),
+    'shareIntro'   => check_markup($node->field_text_above_share_buttons['und'][0]['value'], $node->field_text_above_share_buttons['und'][0]['format']),
+    'finalMessage' => check_markup($node->field_final_message['und'][0]['value'], $node->field_final_message['und'][0]['format']),
+    'donateUrl'    => url("node/$node->nid", ['absolute' => TRUE, 'https' => TRUE]),
+    'submitText'   => $node->field_submit_text['und'][0]['value'],
+    'twitterText'  => $node->field_twitter_tweet_text['und'][0]['value'] ?? '',
+    'facebook'     => (int) ($node->field_facebook['und'][0]['value'] ?? 0),
+    'whatsappText' => $node->field_whatsapp_text['und'][0]['value'] ?? '',
+    'mailingGroup' => $node->field_mailing_list['und'][0]['value'] ?? 0,
+    'testMode'     => (int) ($node->field_test_mode['und'][0]['value'] ?? 0),
+  ];
+  $resource = "public://petition-config/$node->nid.json";
+  // $resource_url = file_create_url($resource);
+  $_ = file_put_contents($resource, json_encode($json));
+}
+
+
+// Page callbacks.
 /**
  * Page callback for json API endpoint used by the public VueJS app for donation pages.
  *
@@ -356,8 +414,17 @@ function oddd__page_api() {
     else {
       oddd__add_page_details($input, $node);
       // If we have source on GET, (and not in input), then add it to input.
-      if (empty($input['source']) && !empty($_GET['input'])) {
-        $input['source'] = $_GET['source'];
+      if (empty($input['source'])) {
+
+        // Use utm params if passed (they won't be until/unless Wagtail starts sending them).
+        $utms = '|' . implode('', array_map(function($_) { return ($_GET[$_] ?? '') . '|'; }, ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content']));
+        if ($utms !== '||||||') {
+          $input['source'] = $utms;
+        }
+        // For now, let 'source' override the utms.
+        if (!empty($_GET['source'])) {
+          $input['source'] = $_GET['source'];
+        }
       }
 
       civicrm_initialize();
@@ -506,5 +573,11 @@ function oddd__add_page_details(&$input, $node) {
   $input['thanks_message_template_id'] = (int) ($node->field_thank_you_tpl['und'][0]['value'] ?? 0);
   $input['tweet']           = $node->field_twitter_tweet_text['und'][0]['value'] ?? '';
   $input['facebook']        = (int) ($node->field_facebook['und'][0]['value'] ?? 0);
+  $input['whatsapp']        = $node->field_whatsapp_text['und'][0]['value'] ?? '';
   // @todo add the current (public) title of the page?
 }
+function oddd__page_rich() {
+  // header("Location: https://www.opendemocracy.net/en/petition-coronavirus-catch-everyone-safety-net/?source=richtest");
+  exit;
+}
+
