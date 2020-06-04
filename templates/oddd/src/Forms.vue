@@ -1,6 +1,7 @@
 <template>
-<div class="odd__forms" ref="top" >
-  <div v-if="campaign_target > 0 && campaign_total/campaign_target > 0.1" class="odd__totaliser odd__form">
+<div class="odd__forms v4" ref="top" >
+  <!-- orig logic: campaign_total/campaign_target > 0.1 -->
+  <div v-if="campaign_target > 0" class="odd__totaliser odd__form">
     <div class="odd__totaliser-bar-target">
       <div class="odd__totaliser-bar-total" :style="totaliser_style"><span>{{campaign_total|currency}}</span></div>
     </div>
@@ -8,6 +9,12 @@
       Raised {{campaign_total|currency}} of {{campaign_target|currency}}
     </div>
   </div>
+
+  <div v-if="showDeadline" class="odd__fund_deadline odd__form">
+    <div class="odd__deadline_period">{{deadlinePeriod}}</div>
+    <div class="odd__deadline_text">{{fund_deadline_text}}</div>
+  </div>
+
   <div v-if="show_regular && step==='step1'" class="odd__form">
 
     <h2>Make a regular donation</h2>
@@ -136,31 +143,34 @@ export default {
 
       campaign_target: 0,
       campaign_total : 0,
-      'title' : null,
-      'nid' : null,
-      'geo' : null,
-      'body' : null,
-      'standfirst' : null,
-      'extra' : null,
-      'source': null,
-      'regular_or_one' : null,
-      'presets' : null,
-      'legal_entity': null,
-      'geoip': null,
-      'first_name': null,
-      'last_name': null,
-      'email': null,
-      'street_address': null,
-      'city': null,
-      'postal_code': null,
-      'country': null,
-      'countries': null,
-      'include_address': null,
-      'mailing_list': null,
-      'regular_push': null,
-      'formId': null,
+      title : null,
+      nid : null,
+      geo : null,
+      body : null,
+      standfirst : null,
+      extra : null,
+      source: null,
+      regular_or_one : null,
+      presets : null,
+      legal_entity: null,
+      geoip: null,
+      first_name: null,
+      last_name: null,
+      email: null,
+      street_address: null,
+      city: null,
+      postal_code: null,
+      country: null,
+      countries: null,
+      include_address: null,
+      mailing_list: null,
+      regular_push: null,
+      formId: null,
       mouse_over_regular: false,
       mouse_over_oneoff: false,
+      fund_deadline_date: '',
+      fund_deadline_text: '',
+      deadlinePeriod: '',
     };
   },
   props: [ 'config', 'show_regular', 'show_oneoff', 'isMobile', 'fixed' ],
@@ -171,7 +181,7 @@ export default {
       'title', 'nid', 'geo', 'body', 'standfirst', 'extra', 'source', 'regular_or_one', 'presets', 'legal_entity',
       'geoip', 'first_name', 'last_name', 'email', 'street_address', 'city', 'postal_code',
       'country', 'countries', 'include_address', 'mailing_list', 'campaign_target', 'campaign_total',
-      'regular_push'
+      'regular_push', 'fund_deadline_date', 'fund_deadline_text'
     ], field => { vm[field] = vm.config[field]; } );
 
     // Check what currencies are in use by presets.
@@ -208,11 +218,27 @@ export default {
         //console.log("no match", vm.config.prefill_amount);
       }
     }
+
+    // Funding deadline?
+    if (this.fund_deadline_date) {
+      this.updateDeadline();
+      if (this.deadlinePeriod.match(/minutes/)) {
+        // Update every minute.
+        window.setInterval(this.updateDeadline.bind(this), 60000);
+      }
+    }
   },
   mounted() {
     this.formId = this._uid;
   },
   computed: {
+    showDeadline() {
+      if (!this.fund_deadline_date) {
+        // No deadline, don't show it.
+        return false;
+      }
+      return true;
+    },
     box_title() {
       return this.recur === 'regular' ? 'Make a regular donation' : 'Make a single donation';
     },
@@ -244,8 +270,41 @@ export default {
     }
   },
   methods: {
+    updateDeadline() {
+      var d = new Date(this.fund_deadline_date);
+      var diffTime = d - (new Date());
+      var diffDays = (diffTime / (1000 * 60 * 60 * 24));
+
+      if (diffTime < 0) {
+        this.deadlinePeriod = '';
+        this.fund_deadline_text = 'Deadline has passed.';
+        return;
+      }
+
+      if (diffDays > 1) {
+        // It's over 24 hours away. Report days.
+        d.setHours(0); d.setMinutes(0); d.setSeconds(0);
+        var n = new Date();
+        n.setHours(0); n.setMinutes(0); n.setSeconds(0);
+        diffDays = Math.round((d - n) / 1000 / 60 / 60 / 24);
+
+        this.deadlinePeriod = diffDays + ' day' + (diffDays > 1 ? 's' : '');
+        return;
+      }
+
+      // It's less than 24 hours away
+      const hours = Math.floor(diffTime / 1000 / 60 / 60);
+      const mins = Math.floor((diffTime / 1000 / 60) - hours*60);
+      if (hours > 11) {
+        this.deadlinePeriod = hours + ' hours';
+        return;
+      }
+
+      this.deadlinePeriod =
+        (hours > 0 ? ( hours + ' hour' + (hours>1 ? 's, ': ', ')) : '')
+        + mins + (mins>1 ? 'mins' : '');
+    },
     considerTooltip(recur) {
-      console.log("considerTooltip");
       this['show_' + recur + '_tooltip'] = (!this['amount_' + recur]);
     },
     setStep(newStep) {

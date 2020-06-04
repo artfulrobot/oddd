@@ -369,3 +369,21 @@ mark.odd__test-mode {
   margin: 0 auto;
   max-width: 45rem;
 }
+
+
+.odd__fund_deadline {
+  display: flex;
+  align-items: center;
+}
+.odd__deadline_period {
+  padding: 0 0.5rem;
+  color: $dark_blue;;
+  flex: 0 0 auto;
+  font-size: 2rem;
+  font-weight: bold;
+}
+.odd__deadline_text {
+  padding-left: 1rem;
+  flex: 1 0 8rem;
+}
+

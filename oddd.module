@@ -61,7 +61,7 @@ function oddd_preprocess_node(&$variables) {
 
   if ($_GET) {
     // Copy GET data to our original query, preferring incoming GET data
-    $_SESSION["node/" . $variables['node']->nid]['original_query'] = array_merge($_SESSION["node/" . $variables['node']->nid]['original_query'], $_GET);
+    $_SESSION["node/" . $variables['node']->nid]['original_query'] = array_merge($_SESSION["node/" . $variables['node']->nid]['original_query'] ?? [], $_GET);
     if (array_intersect(['fname', 'lname', 'email', 'postcode'], array_keys($_GET))) {
       // Redirect back to self without these params.
       $newQuery = $_GET;
@@ -217,6 +217,8 @@ function oddd_preprocess_node(&$variables) {
       "ux"              => ($variables['field_ux'][0]['value'] ?? 'donation-1'),
       'tweet'           => ($variables['node']->field_twitter_tweet_text['und'][0]['value'] ?? ''),
       'facebook'        => (int) ($variables['node']->field_facebook['und'][0]['value'] ?? 0),
+      'fund_deadline_date' => $variables['node']->field_funding_deadline['und'][0]['value'] ?? '',
+      'fund_deadline_text' => $variables['node']->field_funding_deadline_text['und'][0]['value'] ?? '',
     ];
 
     // Allow utm_ params to override source obtained from source/src.
@@ -363,17 +365,23 @@ function oddd_theme($existing, $type, $theme, $path) {
 function oddd_node_postsave($node, $hook_type) {
   $json = [
     // @todo load normal thanks text
-    'shareAsk'     => check_markup($node->field_thanks_can_you_share['und'][0]['value'], $node->field_thanks_can_you_share['und'][0]['format']),
-    'donateAsk'    => check_markup($node->field_thanks_can_you_donate['und'][0]['value'], $node->field_thanks_can_you_donate['und'][0]['format']),
-    'shareIntro'   => check_markup($node->field_text_above_share_buttons['und'][0]['value'], $node->field_text_above_share_buttons['und'][0]['format']),
-    'finalMessage' => check_markup($node->field_final_message['und'][0]['value'], $node->field_final_message['und'][0]['format']),
-    'donateUrl'    => url("node/$node->nid", ['absolute' => TRUE, 'https' => TRUE]),
-    'submitText'   => $node->field_submit_text['und'][0]['value'],
-    'twitterText'  => $node->field_twitter_tweet_text['und'][0]['value'] ?? '',
-    'facebook'     => (int) ($node->field_facebook['und'][0]['value'] ?? 0),
-    'whatsappText' => $node->field_whatsapp_text['und'][0]['value'] ?? '',
-    'mailingGroup' => $node->field_mailing_list['und'][0]['value'] ?? 0,
-    'testMode'     => (int) ($node->field_test_mode['und'][0]['value'] ?? 0),
+    'shareAsk'        => check_markup($node->field_thanks_can_you_share['und'][0]['value'], $node->field_thanks_can_you_share['und'][0]['format']),
+    'donateAsk'       => check_markup($node->field_thanks_can_you_donate['und'][0]['value'], $node->field_thanks_can_you_donate['und'][0]['format']),
+    'shareIntro'      => check_markup($node->field_text_above_share_buttons['und'][0]['value'], $node->field_text_above_share_buttons['und'][0]['format']),
+    'finalMessage'    => check_markup($node->field_final_message['und'][0]['value'], $node->field_final_message['und'][0]['format']),
+    'donateUrl'       => url("node/$node->nid", ['absolute' => TRUE, 'https' => TRUE]),
+    'submitText'      => $node->field_submit_text['und'][0]['value'],
+    'twitterText'     => $node->field_twitter_tweet_text['und'][0]['value'] ?? '',
+    'facebook'        => (int) ($node->field_facebook['und'][0]['value'] ?? 0),
+    'whatsappText'    => $node->field_whatsapp_text['und'][0]['value'] ?? '',
+    'mailingGroup'    => $node->field_mailing_list['und'][0]['value'] ?? 0,
+    'testMode'        => (int) ($node->field_test_mode['und'][0]['value'] ?? 0),
+    'totaliserText'   => $node->field_totaliser_text['und'][0]['value'] ?? 'This petition has been signed',
+    'consentAsk'      => $node->field_consent_ask['und'][0]['value'] ?? '',
+    'countryAskText'  => $node->field_country_ask['und'][0]['value'] ?? "Please let us know your country (optional). We'd like to be able to tell our readers about what's going on in their area.",
+    'emailIsOptional' => $node->field_email_is_optional['und'][0]['value'] ?? 0,
+    'fundDeadlineDate' => $node->field_deadline['und'][0]['value'] ?? '',
+    'fundDeadlineText' => $node->field_deadline_text['und'][0]['value'] ?? '',
   ];
   $resource = "public://petition-config/$node->nid.json";
   // $resource_url = file_create_url($resource);
@@ -578,6 +586,20 @@ function oddd__add_page_details(&$input, $node) {
 }
 function oddd__page_rich() {
   // header("Location: https://www.opendemocracy.net/en/petition-coronavirus-catch-everyone-safety-net/?source=richtest");
+  // $x = variable_get('file_scan_ignore_directories');
+  //$x = variable_set('file_scan_ignore_directories');
+
+  //echo (json_encode($x));
+  exit;
+  $r = odwebapi_redis();
+  print gettype($r);
+  if (!class_exists('Redis')) { 
+    echo "TRUE";
+  }
+  else {
+    echo "FALSE";
+  }
+  //if (function_exists('xdebug_break')) {
   exit;
 }
 
