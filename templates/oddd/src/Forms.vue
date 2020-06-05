@@ -10,9 +10,10 @@
     </div>
   </div>
 
-  <div v-if="showDeadline" class="odd__fund_deadline odd__form">
-    <div class="odd__deadline_period">{{deadlinePeriod}}</div>
-    <div class="odd__deadline_text">{{fund_deadline_text}}</div>
+  <div v-if="fund_deadline_date" class="odd__form">
+    <funding-deadline
+      :dl-date="fund_deadline_date"
+      :dl-text="fund_deadline_text"></funding-deadline>
   </div>
 
   <div v-if="show_regular && step==='step1'" class="odd__form">
@@ -125,9 +126,10 @@
 import Axios from 'axios';
 import Amounts from './Amounts.vue';
 import NameAddress from './NameAddress.vue';
+import FundingDeadline from './FundingDeadline.vue';
 var foreach = require('lodash/forEach');
 export default {
-  components: {Amounts, NameAddress},
+  components: {Amounts, NameAddress, FundingDeadline},
   data() {
     return {
       amount_regular: '',
@@ -219,26 +221,11 @@ export default {
       }
     }
 
-    // Funding deadline?
-    if (this.fund_deadline_date) {
-      this.updateDeadline();
-      if (this.deadlinePeriod.match(/minutes/)) {
-        // Update every minute.
-        window.setInterval(this.updateDeadline.bind(this), 60000);
-      }
-    }
   },
   mounted() {
     this.formId = this._uid;
   },
   computed: {
-    showDeadline() {
-      if (!this.fund_deadline_date) {
-        // No deadline, don't show it.
-        return false;
-      }
-      return true;
-    },
     box_title() {
       return this.recur === 'regular' ? 'Make a regular donation' : 'Make a single donation';
     },
@@ -270,40 +257,6 @@ export default {
     }
   },
   methods: {
-    updateDeadline() {
-      var d = new Date(this.fund_deadline_date);
-      var diffTime = d - (new Date());
-      var diffDays = (diffTime / (1000 * 60 * 60 * 24));
-
-      if (diffTime < 0) {
-        this.deadlinePeriod = '';
-        this.fund_deadline_text = 'Deadline has passed.';
-        return;
-      }
-
-      if (diffDays > 1) {
-        // It's over 24 hours away. Report days.
-        d.setHours(0); d.setMinutes(0); d.setSeconds(0);
-        var n = new Date();
-        n.setHours(0); n.setMinutes(0); n.setSeconds(0);
-        diffDays = Math.round((d - n) / 1000 / 60 / 60 / 24);
-
-        this.deadlinePeriod = diffDays + ' day' + (diffDays > 1 ? 's' : '');
-        return;
-      }
-
-      // It's less than 24 hours away
-      const hours = Math.floor(diffTime / 1000 / 60 / 60);
-      const mins = Math.floor((diffTime / 1000 / 60) - hours*60);
-      if (hours > 11) {
-        this.deadlinePeriod = hours + ' hours';
-        return;
-      }
-
-      this.deadlinePeriod =
-        (hours > 0 ? ( hours + ' hour' + (hours>1 ? 's, ': ', ')) : '')
-        + mins + (mins>1 ? 'mins' : '');
-    },
     considerTooltip(recur) {
       this['show_' + recur + '_tooltip'] = (!this['amount_' + recur]);
     },
