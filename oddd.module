@@ -191,6 +191,13 @@ function oddd_preprocess_node(&$variables) {
 
     $originalQuery = $_SESSION["node/" . $variables['node']->nid]['original_query'] ?? [];
 
+    // Figure out presets.
+    $presets = $variables['field_presets'][0]['value'] ?? '{}';
+    if ($variables['field_presets_use_default'][0]['value'] ?? 0) {
+      $presets = $default = variable_get('oddd_default_presets', '{}');
+    }
+    $presets = json_decode($presets);
+
     $odd_app_config = [
       'title'           => $variables['title'],
       'nid'             => $variables['nid'],
@@ -199,7 +206,7 @@ function oddd_preprocess_node(&$variables) {
       'extra'           => $extra,
       'regular_or_one'  => $variables['field_regular_one_off'][0]['value'],
       'legal_entity'    => $variables['field_account'][0]['value'],
-      'presets'         => json_decode($variables['field_presets'][0]['value']),
+      'presets'         => $presets,
       'account'         => $variables['field_account'][0]['value'],
       'source'          => $_GET['source'] ?? ($_GET['src'] ?? ''),
       'prefill_amount'  => $_GET['amount'] ?? '',
@@ -566,6 +573,20 @@ function oddd__form_config() {
     '#rows'          => 15,
     '#title'         => 'Company: Other Ways To Give text',
   ];
+
+  $default = variable_get('oddd_default_presets', '{}');
+  $form['oddd_default_presets'] = [
+    '#type'          => 'textarea',
+    '#default_value' => $default,
+    '#rows'          => 15,
+    '#title'         => 'Default button presets',
+    '#description'   => 'Each donation page is free to override these, or revert to them. Changing the presets here will affect all donation pages that are using the defaults.',
+  ];
+
+  // Vuejs app to do json.
+  drupal_add_js('https://cdn.jsdelivr.net/npm/vue@2.5.21/dist/vue.js');
+  drupal_add_js(drupal_get_path('module', 'oddd') . '/admin.js');
+
   return system_settings_form($form);
 }
 

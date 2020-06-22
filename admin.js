@@ -30,48 +30,50 @@
 
   // Add some validation to the edit-field-funding-deadline-und-0-value field
   var deadline_input = document.getElementById('edit-field-funding-deadline-und-0-value');
-  deadline_input.style.display = 'none';
-  var deadlineVueAppDiv = document.createElement('DIV');
-  deadline_input.insertAdjacentElement('afterend', deadlineVueAppDiv);
-  var dateValidator = new Vue({
-    el: deadlineVueAppDiv,
-    data: { realInput: deadline_input, userInput: deadline_input.value },
-    template: `
-      <div>
-        <input :style="messageStyle" v-model="userInput" type="text" size=32 class="form-text" /><span :style="messageStyle" >{{message}}</span>
-      </div>
-    `,
-    computed: {
-      isValid() {
-        if (!this.userInput) {
-          return true;
+  if (deadline_input) {
+    deadline_input.style.display = 'none';
+    var deadlineVueAppDiv = document.createElement('DIV');
+    deadline_input.insertAdjacentElement('afterend', deadlineVueAppDiv);
+    var dateValidator = new Vue({
+      el: deadlineVueAppDiv,
+      data: { realInput: deadline_input, userInput: deadline_input.value },
+      template: `
+        <div>
+          <input :style="messageStyle" v-model="userInput" type="text" size=32 class="form-text" /><span :style="messageStyle" >{{message}}</span>
+        </div>
+      `,
+      computed: {
+        isValid() {
+          if (!this.userInput) {
+            return true;
+          }
+          if (this.userInput.match(/^\d{4}-\d\d-\d\d( \d\d:\d\d(:\d\d)?)?$/)) {
+            // Copy to real input.
+            this.realInput.value = this.userInput;
+            return true;
+          }
+          return false;
+        },
+        message() {
+          if (!this.userInput) {
+            return '';
+          }
+          if (!this.isValid) {
+            return '✖ Invalid';
+          }
+          return '✔';
+        },
+        messageStyle() {
+          return {
+            color: this.isValid ? '#0a0' : '#b00'
+          };
         }
-        if (this.userInput.match(/^\d{4}-\d\d-\d\d( \d\d:\d\d(:\d\d)?)?$/)) {
-          // Copy to real input.
-          this.realInput.value = this.userInput;
-          return true;
-        }
-        return false;
-      },
-      message() {
-        if (!this.userInput) {
-          return '';
-        }
-        if (!this.isValid) {
-          return '✖ Invalid';
-        }
-        return '✔';
-      },
-      messageStyle() {
-        return {
-          color: this.isValid ? '#0a0' : '#b00'
-        };
       }
-    }
-  })
+    });
+  }
 
   // Convert the json field into something nicer.
-  var $presetsInput = $('#edit-field-presets-und-0-value').hide();
+  var $presetsInput = $('#edit-field-presets-und-0-value, #edit-oddd-default-presets').hide();
   var editor = $('<div/>')[0];
   $presetsInput.after(editor);
 
@@ -128,4 +130,21 @@
     </div>
     `
   });
+
+
+  // If we have a use defaults switch, make it work.
+  var $presetUseDefault = $('#edit-field-presets-use-default-und');
+  function togglePresetsReDefault() {
+    if ($presetUseDefault.prop('checked')) {
+      app.$el.style.display = 'none';
+    }
+    else {
+      app.$el.style.display = '';
+    }
+  }
+  if ($presetUseDefault.length > 0) {
+    togglePresetsReDefault();
+    $presetUseDefault.on('click', togglePresetsReDefault);
+  }
+
 })})(jQuery);
