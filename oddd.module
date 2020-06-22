@@ -369,6 +369,7 @@ function oddd_node_postsave($node, $hook_type) {
     'donateAsk'        => check_markup($node->field_thanks_can_you_donate['und'][0]['value'], $node->field_thanks_can_you_donate['und'][0]['format']),
     'shareIntro'       => check_markup($node->field_text_above_share_buttons['und'][0]['value'], $node->field_text_above_share_buttons['und'][0]['format']),
     'finalMessage'     => check_markup($node->field_final_message['und'][0]['value'], $node->field_final_message['und'][0]['format']),
+    'title'            => $node->title,
     'donateUrl'        => url("node/$node->nid", ['absolute' => TRUE, 'https' => TRUE]),
     'submitText'       => $node->field_submit_text['und'][0]['value'],
     'twitterText'      => $node->field_twitter_tweet_text['und'][0]['value'] ?? '',
