@@ -46,7 +46,7 @@
   </div>
 
   <div v-if="show_oneoff && step==='step1'" class="odd__form">
-    <h2>Make a single donation</h2>
+    <h2>Make a <span v-if="show_regular">single </span>donation</h2>
     <amounts :allPresets="presets" recur="oneoff"
               v-bind="{currency, amount: amount_oneoff, geo}"
               @updated="updateAmount($event, 'oneoff')"
