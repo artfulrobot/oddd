@@ -29,6 +29,11 @@ function oddd_menu()
       'page callback'   => 'oddd__page_api',
       'access callback' => TRUE,
     ],
+    'oddd/clone/%' => [
+      'page callback'   => 'drupal_get_form',
+      'page arguments'  => ['oddd__form_clone', 2],
+      'access arguments'=> ['edit any donation_page content'],
+    ],
 
     // Business logic for paypal callbacks.
     'oddd/ppcallback' => [
@@ -369,6 +374,7 @@ function oddd_node_postsave($node, $hook_type) {
     'donateAsk'        => check_markup($node->field_thanks_can_you_donate['und'][0]['value'], $node->field_thanks_can_you_donate['und'][0]['format']),
     'shareIntro'       => check_markup($node->field_text_above_share_buttons['und'][0]['value'], $node->field_text_above_share_buttons['und'][0]['format']),
     'finalMessage'     => check_markup($node->field_final_message['und'][0]['value'], $node->field_final_message['und'][0]['format']),
+    'title'            => $node->title,
     'donateUrl'        => url("node/$node->nid", ['absolute' => TRUE, 'https' => TRUE]),
     'submitText'       => $node->field_submit_text['und'][0]['value'],
     'twitterText'      => $node->field_twitter_tweet_text['und'][0]['value'] ?? '',
@@ -564,6 +570,59 @@ function oddd__form_config() {
 }
 
 /**
+ * CLone node form at oddd/clone/%
+ */
+function oddd__form_clone($form, &$form_state, $origNid) {
+
+  $origNode = node_load($origNid);
+  if (!$origNode) {
+    drupal_set_message("Node not found");
+    drupal_goto('admin/content/donation-pages');
+  }
+
+  drupal_set_title("Clone donation form $origNid");
+
+  $form['newName'] = [
+    '#prefix' => '<p>Original Donation Page public title: <em>'
+    . htmlspecialchars($origNode->title) . '</p>',
+    '#type'          => 'textfield',
+    '#title'         => 'New (internal) name',
+    '#description'   => 'You can change this later, of course.',
+    '#default_value' => 'Clone of ' . $origNode->field_internal_name['und'][0]['value'] ?? $origNode->title,
+    '#size'          => 60,
+    '#required'      => true,
+  ];
+
+  $form['submit'] = [
+    '#type'  => 'submit',
+    '#value' => 'Clone',
+  ];
+
+  return $form;
+}
+
+/**
+ * CLone node form at oddd/clone/%
+ */
+function oddd__form_clone_submit($form, &$form_state) {
+
+  $origNid = $form_state["build_info"]["args"][0];
+  $node = node_load($origNid);
+  if (!$node) {
+    drupal_set_message("Node not found");
+    drupal_goto('admin/content/donation-pages');
+  }
+
+  unset($node->nid);
+  unset($node->vid);
+  $node->field_internal_name['und'][0]['value'] = $form_state['values']['newName'];
+  node_save($node);
+
+  drupal_set_message("Ok, done that. Now you can edit the clone.");
+  drupal_goto("node/$node->nid/edit");
+}
+
+/**
  * Augment incoming data with data from node.
  *
  * @param array &$input
@@ -585,22 +644,17 @@ function oddd__add_page_details(&$input, $node) {
   $input['whatsapp']        = $node->field_whatsapp_text['und'][0]['value'] ?? '';
   // @todo add the current (public) title of the page?
 }
-function oddd__page_rich() {
-  // header("Location: https://www.opendemocracy.net/en/petition-coronavirus-catch-everyone-safety-net/?source=richtest");
-  // $x = variable_get('file_scan_ignore_directories');
-  //$x = variable_set('file_scan_ignore_directories');
 
-  //echo (json_encode($x));
+/**
+ */
+function oddd__page_rich() {
   exit;
   $r = odwebapi_redis();
   print gettype($r);
-  if (!class_exists('Redis')) { 
-    echo "TRUE";
-  }
+  if (!class_exists('Redis')) { echo "TRUE"; }
   else {
     echo "FALSE";
   }
-  //if (function_exists('xdebug_break')) {
   exit;
 }
 
