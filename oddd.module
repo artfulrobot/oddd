@@ -725,7 +725,7 @@ function oddd__page_ab_list() {
     $stats['total_count'] = $stats['A']['count'] + $stats['B']['count'];
     $stats['total_sum'] = $stats['A']['sum'] + $stats['B']['sum'];
 
-    $html .= "<table><thead><tr><th>AB</th><th>Impresssions</th><th>Info</th><th>Income</th><th>Donations</th></tr></thead><tbody>";
+    $html .= "<table><thead><tr><th>AB</th><th>Impresssions</th><th>Income</th><th>Donations</th><th>Donation Page</th></tr></thead><tbody>";
 
     $isWinner = $ab['winner'] === 'A';
     $html .= "<tr><td>A " . ($isWinner ? '✔' : '') . "</td>"
@@ -744,7 +744,7 @@ function oddd__page_ab_list() {
       . (($stats['total_count'] > 0)
         ? " (" . number_format($stats['A']['count']*100/$stats['total_count'], 1) . "%)"
         : '')
-      . "<td>" . htmlspecialchars($nodeA->title) . '</td></tr>';
+      . "<td><a href='" . drupal_lookup_path('alias', "node/$nodeA->nid") . "'>" . htmlspecialchars($nodeA->title) . '</a></td></tr>';
 
     $isWinner = $ab['winner'] === 'B';
     $html .= "<tr><td>B " . ($isWinner ? '✔' : '') . "</td>"
@@ -763,13 +763,13 @@ function oddd__page_ab_list() {
       . (($stats['total_count'] > 0)
         ? " (" . number_format($stats['B']['count']*100/$stats['total_count'], 1) . "%)"
         : '')
-      . "<td>" . htmlspecialchars($nodeB->title) . '</td></tr>'
+      . "<td><a href='" . drupal_lookup_path('alias', "node/$nodeB->nid") . "'>" . htmlspecialchars($nodeB->title) . '</a></td></tr>'
       . "</tbody></table>\n";
 
     $html .= "<p>Stats "
       . ( $ab['start_timestamp'] ? " include contributions since " . date('H:i j M Y', strtotime($ab['start_timestamp'])) : ' include all contributions')
       . " and were last updated at " . htmlspecialchars($stats['updated']) . ". To update them manually you can just edit and save this AB</p>";
-    $html .= "<p>" . htmlspecialchars($ab['log']) . "</p>";
+    $html .= "<p class='ab-stats-log'>" . htmlspecialchars($ab['log']) . "</p>";
     $html .= "<a href='/admin/content/oddd/ab/$ab[id]/edit'>Edit</a> |
       <a href='/admin/content/oddd/ab/$ab[id]/delete' >Delete</a>
       </article>\n";
@@ -781,6 +781,9 @@ function oddd__page_ab_list() {
       background: rgba(0,0,0,0.03);
       padding: 1rem;
       margin-bottom: 1rem;
+    }
+    .ab-stats-log {
+      white-space: pre-wrap;
     }
     </style>";
   return ['#markup' => $html];
@@ -952,9 +955,12 @@ function oddd__form_ab_edit_submit($form, &$form_state) {
     ? date('YmdHis', strtotime($form_state['values']['start_timestamp']))
     : NULL;
 
-  civicrm_initialize();
-  $stats = CRM_Oddc::getAbStats([$form_state['values']['nid_a'], $form_state['values']['nid_b']], $ts);
-  $stats = json_encode($stats);
+  if (!$form_state['values']['winner']) {
+    // Force update of stats.
+    civicrm_initialize();
+    $stats = CRM_Oddc::getAbStats([$form_state['values']['nid_a'], $form_state['values']['nid_b']], $ts);
+    $stats = json_encode($stats);
+  }
 
   if ($origID === 'new') {
     // Create record.
@@ -969,27 +975,35 @@ function oddd__form_ab_edit_submit($form, &$form_state) {
         ':start_timestamp' => $ts
       ]
     );
+    drupal_set_message("Created new AB link. " . ($stats ? '' : 'Stats were not updated because a winner has been selected - this is strange for a new AB test, did you mean to do this?'));
   }
   else {
     // Update
-    db_query("UPDATE od_donation_page_ab
-      SET log = :log,
-          nid_a = :nid_a,
-          nid_b = :nid_b,
-          winner = :winner,
-          stats_cache = :stats,
-          start_timestamp = :start_timestamp
-      WHERE id = :id",
-      [
+    $andSetStats = '';
+    $params = [
         ':id'     => $origID,
         ':log'    => $form_state['values']['log'],
         ':nid_a'  => $form_state['values']['nid_a'],
         ':nid_b'  => $form_state['values']['nid_b'],
         ':winner' => $form_state['values']['winner'],
-        ':stats' => $stats,
         ':start_timestamp' => $ts
-      ]
+      ];
+    if (isset($stats)) {
+      $andSetStats = 'stats_cache = :stats,';
+      $params[':stats'] = $stats;
+    }
+    db_query("UPDATE od_donation_page_ab
+      SET log = :log,
+          nid_a = :nid_a,
+          nid_b = :nid_b,
+          winner = :winner,
+          $andSetStats
+          start_timestamp = :start_timestamp
+      WHERE id = :id",
+      $params
     );
+    drupal_set_message("Updated AB link. " . ($stats ? 'Stats are up-to-date'
+      : 'Stats were not updated because there is already a winner'));
   }
   $form_state['redirect'] = 'admin/content/oddd/ab';
 }
@@ -1068,18 +1082,37 @@ function oddd__page_ab_redirect($id) {
     break;
 
   default:
-    if (rand(1, 100) >= 50) {
-      $counter = 'count_a';
-      $nid = $ab['nid_a'];
+    // If there's a big discrepancy between a and b, force the unpopular one.
+    $diff = $ab['count_a'] - $ab['count_b'];
+
+    if (abs($diff) > 5) {
+      if ($diff > 0) {
+        // A is getting too much of the share. Use B.
+        $counter = 'count_b';
+        $nid = $ab['nid_b'];
+      }
+      else {
+        // B is getting too much of the share. Use B.
+        $counter = 'count_b';
+        $nid = $ab['nid_b'];
+      }
     }
     else {
-      $counter = 'count_b';
-      $nid = $ab['nid_b'];
+      // Use random generator.
+      if (rand(1, 100) >= 50) {
+        $counter = 'count_a';
+        $nid = $ab['nid_a'];
+      }
+      else {
+        $counter = 'count_b';
+        $nid = $ab['nid_b'];
+      }
     }
   }
 
   // Just in case.
   $ab['id'] = (int) $ab['id'];
+  // Nb. do the update as an SQL expression as the data may have been updated since we fetched it.
   db_query("UPDATE od_donation_page_ab SET $counter = $counter + 1 WHERE id = $ab[id]");
 
   // Redirect.
