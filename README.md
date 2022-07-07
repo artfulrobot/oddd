@@ -1,7 +1,11 @@
-## Installation
+# Give Up GitHub
 
-    curl -s -L 'http://geolite.maxmind.com/download/geoip/database/GeoLite2-Country.tar.gz' | tar xz
-    mv GeoLite2-Country_*/GeoLite2-Country.mmdb ./ && rm -rf GeoLite2-Country_*/
+This project has given up GitHub.  ([See Software Freedom Conservancy's *Give Up  GitHub* site for details](https://GiveUpGitHub.org).)
 
-    composer install
+You can now find this project at [Codeberg](https://codeberg.org/artfulrobot/oddd) instead.
 
+Any use of this project's code by GitHub Copilot, past or present, is done without our permission.  We do not consent to GitHub's use of this project's code in Copilot.
+
+Join us; you can [give up GitHub](https://GiveUpGitHub.org) too!
+
+![Logo of the GiveUpGitHub campaign](https://sfconservancy.org/img/GiveUpGitHub.png)
